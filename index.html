@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v43</title>
+<title>JR MOTOS v44</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -249,7 +249,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <div class="sc"><div class="si ro">🚨</div><div><div class="sn ro" id="s-mor">0</div><div class="sl">En mora</div></div></div>
       <div class="sc"><div class="si am">💵</div><div><div class="sn am" id="s-hoy">$0</div><div class="sl">Cobrado sem.</div></div></div>
     </div>
-    <div id="stats-admin" style="display:none;">
+    <div id="stats-admin">
       <div class="sg">
         <div class="sc"><div class="si az">🏦</div><div><div class="sn az" id="s-car">$0</div><div class="sl">Cartera total</div></div></div>
         <div class="sc"><div class="si ve">📈</div><div><div class="sn ve" id="s-cob">$0</div><div class="sl">Total cobrado</div></div></div>
@@ -501,7 +501,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
     <!-- Editar / Eliminar -->
     <div style="max-width:480px;margin:10px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <button class="btn btn-dark" style="background:#1a2a3a;color:#7ec8e3;border:1px solid #1e3a50;" onclick="abrirEditarRecibo()">✏️ EDITAR</button>
-      <button class="btn btn-dark" style="background:#2a0a0a;color:var(--rojo);border:1px solid #3a1010;" onclick="confirmarEliminarRecibo()">🗑 ELIMINAR</button>
+      <button class="btn btn-dark" style="background:#2a0a0a;color:var(--rojo);border:1px solid #3a1010;" onclick="closeReciboModal()">🗑 ELIMINAR</button>
     </div>
     <div id="recibo-render"></div>
   </div>
@@ -670,7 +670,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v43 OK');
+console.log('JR MOTOS v44 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
