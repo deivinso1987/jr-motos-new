@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v38</title>
+<title>JR MOTOS v39</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -651,7 +651,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS HASH:299e9216 lineas:1691');
+console.log('JR MOTOS v39 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1139,7 +1139,7 @@ function renderReciboHTML(r){
     <div class="r-body">
       <div class="r-title">Comprobante de Pago</div>
       <div class="r-grid">
-        <div class="r-cell"><div class="r-cl">Fecha de Pago</div><div class="r-cv">${fmtFecha(r.fecha)}</div></div>
+        <div class="r-cell"><div class="r-cl">Fecha de Pago</div><div class="r-cv">${fmtF(r.fecha)}</div></div>
         <div class="r-cell e"><div class="r-cl">Semana N°</div><div class="r-cv">${semText}</div></div>
         <div class="r-cell full"><div class="r-cl">Nombre del Cliente</div><div class="r-cv">${r.nombre}</div></div>
         <div class="r-cell"><div class="r-cl">Cédula / Documento</div><div class="r-cv">${r.cedula||'No especificado'}</div></div>
@@ -1246,7 +1246,7 @@ function abrirWaConTexto(){
     `🏍️ *JR MOTOS – Comprobante de Pago*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `📋 *Recibo N°:* ${r.num}\n` +
-    `📅 *Fecha:* ${fmtFecha(r.fecha)}\n` +
+    `📅 *Fecha:* ${fmtF(r.fecha)}\n` +
     `🗓️ *${semText}*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `👤 *Cliente:* ${r.nombre}\n` +
@@ -1313,7 +1313,7 @@ function abrirWaConTexto(){
     `🏍️ *JR MOTOS – Comprobante de Pago*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `📋 *Recibo N°:* ${r.num}\n` +
-    `📅 *Fecha:* ${fmtFecha(r.fecha)}\n` +
+    `📅 *Fecha:* ${fmtF(r.fecha)}\n` +
     `🗓️ *${semText}*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `👤 *Cliente:* ${r.nombre}\n` +
