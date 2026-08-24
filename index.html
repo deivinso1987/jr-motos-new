@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v24</title>
+<title>JR MOTOS v25</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -193,7 +193,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <div class="sc"><div class="si az">🏍️</div><div><div class="sn az" id="s-tot">0</div><div class="sl">Motos activas</div></div></div>
       <div class="sc"><div class="si ve">✅</div><div><div class="sn ve" id="s-ald">0</div><div class="sl">Al día</div></div></div>
       <div class="sc"><div class="si ro">🚨</div><div><div class="sn ro" id="s-mor">0</div><div class="sl">En mora</div></div></div>
-      <div class="sc"><div class="si am">💵</div><div><div class="sn am" id="s-hoy">$0</div><div class="sl">Cobrado hoy</div></div></div>
+      <div class="sc"><div class="si am">💵</div><div><div class="sn am" id="s-hoy">$0</div><div class="sl">Cobrado sem.</div></div></div>
     </div>
     <div id="stats-admin" style="display:none;">
       <div class="sg">
@@ -467,7 +467,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v24 cargado ✅');
+console.log('JR MOTOS v25 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -650,12 +650,20 @@ const renders={
     const act=DB.motos.filter(m=>m.estado==='activo');
     const enMora=act.filter(m=>semanasEnMora(m)>=1);
     const alDia=act.filter(m=>semanasEnMora(m)===0);
-    const pagHoy=DB.pagos.filter(p=>p.fecha===h);
-    const totHoy=pagHoy.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
-    const totCob=DB.pagos.filter(p=>act.find(m=>m.id===p.motoId)).reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
+    // Semana de cobro: sábado→martes. Calcular inicio (último sábado)
+    const hDate=new Date(h+'T12:00:00');
+    const diaSem=hDate.getDay(); // 0=dom,1=lun,2=mar,3=mie,4=jue,5=vie,6=sab
+    // Días desde el último sábado: sab=0, dom=1, lun=2, mar=3, mie=4, jue=5, vie=6
+    const diasDesdeSab=diaSem===6?0:(diaSem+1);
+    const inicioSem=new Date(hDate.getTime()-diasDesdeSab*24*60*60*1000);
+    const inicioSemStr=inicioSem.toISOString().slice(0,10);
+    const pagsSem=DB.pagos.filter(p=>p.fecha>=inicioSemStr&&p.fecha<=h);
+    const totSem=pagsSem.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
+    // Total cobrado histórico (todos los pagos de motos activas)
+    const totCob=DB.pagos.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
     const cartera=act.reduce((s,m)=>{const pg=DB.pagos.filter(p=>p.motoId===m.id).reduce((t,p)=>t+(parseFloat(p.monto)||0),0);return s+Math.max(0,(m.cuota||0)*(m.semanas||78)-pg);},0);
     $('s-tot').textContent=act.length;$('s-ald').textContent=alDia.length;
-    $('s-mor').textContent=enMora.length;$('s-hoy').textContent=fmt(totHoy);
+    $('s-mor').textContent=enMora.length;$('s-hoy').textContent=fmt(totSem);
     if($('s-car'))$('s-car').textContent=fmt(cartera);
     if($('s-cob'))$('s-cob').textContent=fmt(totCob);
     const hace6=new Date(new Date(h+'T12:00:00').getTime()-6*24*60*60*1000).toISOString().slice(0,10);
