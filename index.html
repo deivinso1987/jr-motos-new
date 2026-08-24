@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v39</title>
+<title>JR MOTOS v40</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -651,7 +651,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v39 OK');
+console.log('JR MOTOS v40 - fmtFecha OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1110,6 +1110,13 @@ function calcPrevMoto(){
 }
 
 // ── RECIBO ──
+function fmtFecha(str){
+  if(!str) return '—';
+  const [y,m,d]=str.split('-');
+  const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;
+}
+
 function renderReciboHTML(r){
   const semText=r.semana?`Semana N° ${r.semana}`:'N/A';
   document.getElementById('recibo-render').innerHTML=`
@@ -1139,7 +1146,7 @@ function renderReciboHTML(r){
     <div class="r-body">
       <div class="r-title">Comprobante de Pago</div>
       <div class="r-grid">
-        <div class="r-cell"><div class="r-cl">Fecha de Pago</div><div class="r-cv">${fmtF(r.fecha)}</div></div>
+        <div class="r-cell"><div class="r-cl">Fecha de Pago</div><div class="r-cv">${fmtFecha(r.fecha)}</div></div>
         <div class="r-cell e"><div class="r-cl">Semana N°</div><div class="r-cv">${semText}</div></div>
         <div class="r-cell full"><div class="r-cl">Nombre del Cliente</div><div class="r-cv">${r.nombre}</div></div>
         <div class="r-cell"><div class="r-cl">Cédula / Documento</div><div class="r-cv">${r.cedula||'No especificado'}</div></div>
