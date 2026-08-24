@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v45</title>
+<title>JR MOTOS v46</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -679,7 +679,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v45 OK');
+console.log('JR MOTOS v46 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -975,6 +975,7 @@ const renders={
       const mo=semanasEnMora(m);
       const sc=semColor(mo);
       const pagados=DB.pagos.filter(p=>p.motoId===m.id).length;
+      const totalPagado=DB.pagos.filter(p=>p.motoId===m.id).reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
       const pct=Math.min(100,Math.round((pagados/(m.semanas||78))*100));
       const fill=m.estado==='suspendido'?'#9e9e9e':(mo>=6?'var(--roc)':(mo>=3?'var(--moc)':(mo>=1?'var(--amc)':'var(--vec)')));
       const badgeCls=m.estado==='suspendido'?'am':(mo>=6?'ro':(mo>=3?'mo':(mo>=1?'am':'ve')));
@@ -985,7 +986,7 @@ const renders={
         +'<div class="moto-sub">'+m.placa+' · '+m.modelo+' · '+DIAS_NOMBRE[m.diaPago||'sabado']+'</div></div>'
         +'<div class="moto-right"><div class="moto-monto" style="color:'+(mo>0?fill:'var(--ne)')+'">'+fmt(m.cuota)+'/sem</div>'
         +'<span class="badge '+badgeCls+'">'+badgeTxt+'</span></div></div>'
-        +'<div class="moto-prog"><div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--gt);margin-bottom:4px;"><span>'+pagados+'/'+m.semanas+' pagos</span><span>'+pct+'%</span></div>'
+        +'<div class="moto-prog"><div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--gt);margin-bottom:4px;"><span>'+pagados+'/'+m.semanas+' pagos · '+fmt(totalPagado)+' pagado</span><span>'+pct+'%</span></div>'
         +'<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:'+fill+'"></div></div></div></div>';
     }).join('');
   },
