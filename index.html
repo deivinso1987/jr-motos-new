@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v44</title>
+<title>JR MOTOS v45</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -336,12 +336,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
   <div class="page" id="page-usuarios">
     <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;margin-top:8px;">
       <div class="sec-title">👥 Gestión de Usuarios</div>
-      <div style="border-top:1px solid #f0f0f0;padding-top:12px;margin-top:8px;">
-        <div style="font-size:.75rem;font-weight:700;color:var(--gt);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🛠️ Herramientas admin</div>
-        <button onclick="btnImportarPagos()" style="width:100%;background:var(--am);color:#fff;border:none;border-radius:9px;padding:11px;font-size:.85rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;margin-bottom:8px;">🔄 Limpiar y reimportar datos correctos</button>
-        <div id="import-msg" style="font-size:.78rem;color:var(--gt);margin-top:6px;"></div>
-      </div>
-    </div>
+>
     <div id="lista-usuarios"></div>
   </div>
 
@@ -670,7 +665,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v44 OK');
+console.log('JR MOTOS v45 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1474,7 +1469,12 @@ const modales={
       +'<div style="height:7px;background:#f0f0f0;border-radius:4px;margin:4px 0 16px;"><div style="height:7px;background:'+(mo>0?'var(--roc)':'var(--vec)')+';border-radius:4px;width:'+pct+'%;"></div></div>'
       +(esAdmin?'<div class="sec-title">Historial de pagos</div>'
         +(!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos aún</div>'
-          :pags.map(p=>'<div class="pago-row" onclick="modales.verRecibo(\''+p.id+'\')" style="cursor:pointer;"><div><div style="font-size:.85rem;font-weight:600;">'+fmt(p.monto)+'</div><div style="font-size:.72rem;color:var(--gt);">'+fmtF(p.fecha)+' · '+p.metodo+(p.obs?' · '+p.obs:'')+'</div></div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;color:var(--az);">🧾</span><button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="event.stopPropagation();acc.eliminarPago(\''+p.id+'\',\''+id+'\')">✕</button></div></div>').join(''))
+          :pags.map((p,i)=>{
+            const pid=p.id;
+            const sem=pags.length-i;
+            return '<div style="border-bottom:1px solid #f0f0f0;padding:10px 0;display:flex;justify-content:space-between;align-items:center;">'
+              +'<div style="flex:1;cursor:pointer;" onclick="modales.verRecibo(\''+pid+'\')">'              +'<div style="font-size:.72rem;font-weight:700;color:var(--az);">Sem '+sem+' · '+fmtF(p.fecha)+'</div>'              +'<div style="font-size:.9rem;font-weight:700;">'+fmtFull(p.monto)+'</div>'              +'<div style="font-size:.7rem;color:var(--gt);">'+p.metodo+(p.obs?' · '+p.obs:'')+'</div>'              +'</div>'              +'<div style="display:flex;gap:5px;flex-shrink:0;">'              +'<button onclick="modales.verRecibo(\''+pid+'\')" style="background:var(--az);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:.68rem;font-weight:700;cursor:pointer;">🧾</button>'              +'<button onclick="modales.editarPago(\''+pid+'\')" style="background:#e8eaf6;color:var(--az);border:none;border-radius:6px;padding:5px 9px;font-size:.68rem;font-weight:700;cursor:pointer;">✏️</button>'              +'<button onclick="event.stopPropagation();acc.eliminarPago(\''+pid+'\',\''+id+'\')" style="background:none;border:none;color:#bbb;cursor:pointer;font-size:1rem;">✕</button>'              +'</div></div>';
+          }).join(''))
         :'');
     $('d-pagar').onclick=()=>{ cerrarMb('m-det'); modales.abrirPago(id); };
     if(esAdmin){
