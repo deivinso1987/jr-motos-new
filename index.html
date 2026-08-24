@@ -17,6 +17,7 @@
   --am:#e65100;--amc:#fb8c00;--amb:#fff3e0;
   --mo:#6a1b9a;--moc:#8e24aa;--mob:#f3e5f5;
   --bg:#f0f2f5;--bo:#e0e0e0;--gt:#757575;--ne:#212121;
+  --rojo:#e8001d;--crema:#ede8df;--naranja:#ff6b00;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;background:var(--bg);}
@@ -193,6 +194,14 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 .r-sello span{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4caf50;}
 .r-thanks{font-size:.65rem;color:#888;text-align:right;line-height:1.5;}
 
+/* ── RECIBO MODAL (visor + editar/eliminar) ── */
+#recibo-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;overflow-y:auto;padding:16px;}
+#recibo-modal-bg.open{display:block;}
+#recibo-render,#recibo-render-cap{background:var(--crema);color:#111;border-radius:12px;overflow:hidden;max-width:480px;margin:0 auto;font-family:'DM Sans',sans-serif;}
+.recibo-actions-float{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:12px;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);}
+.recibo-actions-float .btn-green{grid-column:1/-1;}
+#m-epago{z-index:650;}
+
 /* ── CLIENT DETAIL MODAL ── */
 #client-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:550;overflow-y:auto;padding:16px;}
 #client-modal-bg.open{display:block;}
@@ -336,7 +345,12 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
   <div class="page" id="page-usuarios">
     <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;margin-top:8px;">
       <div class="sec-title">👥 Gestión de Usuarios</div>
->
+      <div style="border-top:1px solid #f0f0f0;padding-top:12px;margin-top:8px;">
+        <div style="font-size:.75rem;font-weight:700;color:var(--gt);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🛠️ Herramientas admin</div>
+        <button onclick="btnImportarPagos()" style="width:100%;background:var(--am);color:#fff;border:none;border-radius:9px;padding:11px;font-size:.85rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;margin-bottom:8px;">🔄 Limpiar y reimportar datos correctos</button>
+        <div id="import-msg" style="font-size:.78rem;color:var(--gt);margin-top:6px;"></div>
+      </div>
+    </div>
     <div id="lista-usuarios"></div>
   </div>
 
@@ -481,7 +495,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
   <button class="btn btn-out" style="margin-top:10px;" onclick="cerrarMb('m-rec')">Cerrar</button>
 </div></div>
 
-<div id="recibo-render" style="position:fixed;left:-9999px;top:-9999px;width:400px;font-family:'Inter',sans-serif;"></div>
+<div id="recibo-render-cap" style="position:fixed;left:-9999px;top:-9999px;width:400px;font-family:'Inter',sans-serif;"></div>
 
 <div id="recibo-modal-bg">
   <div style="max-width:480px;margin:0 auto;">
@@ -495,8 +509,8 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
     </div>
     <!-- Editar / Eliminar -->
     <div style="max-width:480px;margin:10px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <button class="btn btn-dark" style="background:#1a2a3a;color:#7ec8e3;border:1px solid #1e3a50;" onclick="abrirEditarRecibo()">✏️ EDITAR</button>
-      <button class="btn btn-dark" style="background:#2a0a0a;color:var(--rojo);border:1px solid #3a1010;" onclick="closeReciboModal()">🗑 ELIMINAR</button>
+      <button class="btn btn-dark" style="background:#1a2a3a;color:#7ec8e3;border:1px solid #1e3a50;" onclick="modales.editarPago(currentRecibo.id)">✏️ EDITAR</button>
+      <button class="btn btn-dark" style="background:#2a0a0a;color:var(--rojo);border:1px solid #3a1010;" onclick="eliminarDesdeRecibo()">🗑 ELIMINAR</button>
     </div>
     <div id="recibo-render"></div>
   </div>
@@ -999,7 +1013,7 @@ const renders={
     const el=$('pd-lista');
     if(!ahoy.length){el.innerHTML='<div style="text-align:center;color:var(--gt);padding:20px;font-size:.85rem;">Sin pagos hoy</div>';return;}
     el.innerHTML=ahoy.sort((a,b)=>b.id.localeCompare(a.id)).map(p=>`
-      <div class="pago-row" onclick="modales.verRecibo('${p.id}')" style="cursor:pointer;">
+      <div class="pago-row" onclick="modales.verRecibo('${p.id}',false)" style="cursor:pointer;">
         <div>
           <div style="font-size:.85rem;font-weight:600;">${p.clienteNombre||'—'}</div>
           <div style="font-size:.72rem;color:var(--az);font-weight:600;">${p.modelo||''}</div>
@@ -1142,7 +1156,7 @@ function fmtFecha(str){
 
 function renderReciboHTML(r){
   const semText=r.semana?`Semana N° ${r.semana}`:'N/A';
-  document.getElementById('recibo-render').innerHTML=`
+  const reciboHtml=`
     <div class="r-header">
       <div class="r-logo-row">
         <div class="r-logo-box">
@@ -1193,6 +1207,8 @@ function renderReciboHTML(r){
       <div class="r-sello"><div class="r-dot"></div><span>Pago Confirmado</span></div>
       <div class="r-thanks">¡Gracias por su pago puntual!<br><span style="color:#999">JR MOTOS – Tu moto, tu crédito.</span></div>
     </div>`;
+  document.getElementById('recibo-render').innerHTML=reciboHtml;
+  document.getElementById('recibo-render-cap').innerHTML=reciboHtml;
 }
 
 function closeReciboModal(){
@@ -1200,8 +1216,13 @@ function closeReciboModal(){
   ultimaImagenURL = null;
 }
 
+function eliminarDesdeRecibo(){
+  if(!currentRecibo) return;
+  acc.eliminarPago(currentRecibo.id, currentRecibo.motoId);
+}
+
 async function capturarImagenBlob(){
-  const el = document.getElementById('recibo-render');
+  const el = document.getElementById('recibo-render-cap');
   const canvas = await html2canvas(el, {
     scale: 2.5,
     backgroundColor: '#ede8df',
@@ -1223,7 +1244,7 @@ async function verImagenRecibo(){
     }
     // Si no existe en DB, regenerarla renderizando el recibo
     if(!ultimaImagenURL) {
-      if(!document.getElementById('recibo-render').innerHTML.trim()) {
+      if(!document.getElementById('recibo-render-cap').innerHTML.trim()) {
         if(currentRecibo) renderReciboHTML(currentRecibo);
         await new Promise(r => setTimeout(r, 400));
       }
@@ -1469,12 +1490,7 @@ const modales={
       +'<div style="height:7px;background:#f0f0f0;border-radius:4px;margin:4px 0 16px;"><div style="height:7px;background:'+(mo>0?'var(--roc)':'var(--vec)')+';border-radius:4px;width:'+pct+'%;"></div></div>'
       +(esAdmin?'<div class="sec-title">Historial de pagos</div>'
         +(!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos aún</div>'
-          :pags.map((p,i)=>{
-            const pid=p.id;
-            const sem=pags.length-i;
-            return '<div style="border-bottom:1px solid #f0f0f0;padding:10px 0;display:flex;justify-content:space-between;align-items:center;">'
-              +'<div style="flex:1;cursor:pointer;" onclick="modales.verRecibo(\''+pid+'\')">'              +'<div style="font-size:.72rem;font-weight:700;color:var(--az);">Sem '+sem+' · '+fmtF(p.fecha)+'</div>'              +'<div style="font-size:.9rem;font-weight:700;">'+fmtFull(p.monto)+'</div>'              +'<div style="font-size:.7rem;color:var(--gt);">'+p.metodo+(p.obs?' · '+p.obs:'')+'</div>'              +'</div>'              +'<div style="display:flex;gap:5px;flex-shrink:0;">'              +'<button onclick="modales.verRecibo(\''+pid+'\')" style="background:var(--az);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:.68rem;font-weight:700;cursor:pointer;">🧾</button>'              +'<button onclick="modales.editarPago(\''+pid+'\')" style="background:#e8eaf6;color:var(--az);border:none;border-radius:6px;padding:5px 9px;font-size:.68rem;font-weight:700;cursor:pointer;">✏️</button>'              +'<button onclick="event.stopPropagation();acc.eliminarPago(\''+pid+'\',\''+id+'\')" style="background:none;border:none;color:#bbb;cursor:pointer;font-size:1rem;">✕</button>'              +'</div></div>';
-          }).join(''))
+          :pags.map(p=>'<div class="pago-row" onclick="modales.verRecibo(\''+p.id+'\',false)" style="cursor:pointer;"><div><div style="font-size:.85rem;font-weight:600;">'+fmt(p.monto)+'</div><div style="font-size:.72rem;color:var(--gt);">'+fmtF(p.fecha)+' · '+p.metodo+(p.obs?' · '+p.obs:'')+'</div></div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;color:var(--az);">🧾</span><button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="event.stopPropagation();acc.eliminarPago(\''+p.id+'\',\''+id+'\')">✕</button></div></div>').join(''))
         :'');
     $('d-pagar').onclick=()=>{ cerrarMb('m-det'); modales.abrirPago(id); };
     if(esAdmin){
@@ -1502,7 +1518,7 @@ const modales={
     $('ep-obs').value=p.obs||'';
     abrirMb('m-epago');
   },
-  verRecibo(pagoId){
+  verRecibo(pagoId,auto=true){
     const p=DB.pagos.find(x=>x.id===pagoId);if(!p)return;
     const m=DB.motos.find(x=>x.id===p.motoId);
     const numRecibo=p.recibo||p.id.slice(-4).toUpperCase();
@@ -1511,7 +1527,7 @@ const modales={
     const proxFmt=prox.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     const montoStr=(p.monto||0).toLocaleString('es-CO');
     currentRecibo={
-      id:p.id, num:numRecibo, fecha:p.fecha, semana:pagados,
+      id:p.id, motoId:p.motoId, num:numRecibo, fecha:p.fecha, semana:pagados,
       nombre:(p.clienteNombre||'').toUpperCase(),
       cedula:m?m.cedula:'', placa:m?m.placa:'', modelo:m?m.modelo:'',
       monto:montoStr, metodo:p.metodo||'Nequi', tel:m?m.tel:'', obs:p.obs||'',
@@ -1520,9 +1536,12 @@ const modales={
     ultimaImagenURL=null;
     renderReciboHTML(currentRecibo);
     document.getElementById('recibo-modal-bg').classList.add('open');
-    toast('⏳ Generando imagen para WhatsApp...');
-    setTimeout(()=>compartirWhatsApp(),600);
+    if(auto){
+      toast('⏳ Generando imagen para WhatsApp...');
+      setTimeout(()=>compartirWhatsApp(),600);
+    }
   },
+
 
 
   abrirRecordatorios(){
@@ -1652,6 +1671,7 @@ const acc={
     const p=DB.pagos.find(x=>x.id===pagId);if(!p)return;
     const val=leerVal('ep-val');
     if(!val||val<=0){toast('⚠️ Valor inválido');return;}
+    const vinoDelRecibo=currentRecibo && currentRecibo.id===pagId;
     p.monto=val;
     p.fecha=$('ep-fec').value;
     p.metodo=$('ep-met').value;
@@ -1661,16 +1681,19 @@ const acc={
     await cargar();
     renders.inicio();
     toast(ok?'✅ Pago actualizado':'✅ Guardado localmente');
-    modales.verMoto(motoId);
+    if(vinoDelRecibo){ modales.verRecibo(pagId,false); } else { modales.verMoto(motoId); }
   },
   async eliminarPago(pagId,motoId){
     if(ROL!=='admin'){toast('⛔ Solo admin puede eliminar');return;}
     if(!confirm('¿Eliminar este pago?'))return;
     DB.pagos=DB.pagos.filter(x=>x.id!==pagId);
-    cerrarMb('m-det'); renders.inicio();
+    cerrarMb('m-det');
+    document.getElementById('recibo-modal-bg').classList.remove('open');
+    renders.inicio();
     await fsDel('pagos',pagId).catch(()=>bk());
     toast('🗑 Pago eliminado');
   },
+
 
   enviarWA(){
     const tel=$('wa-tel').value.replace(/\D/g,'');
