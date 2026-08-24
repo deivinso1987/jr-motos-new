@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v22</title>
+<title>JR MOTOS v23</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -467,7 +467,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v22 cargado ✅');
+console.log('JR MOTOS v23 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1049,6 +1049,17 @@ function toggleDia(el){
   const det=el.nextElementSibling;
   det.style.display=det.style.display==='none'?'block':'none';
 }
+
+
+function abrirMb(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function cerrarMb(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+function pagoVolver(){$('pago-p1').style.display='block';$('pago-p2').style.display='none';$('pago-bus').value='';$('pago-moto-id').value='';renders.listaPagoCli('');}
+function abrirWaMoto(m,mo){const msg=mo>0?'Hola '+m.nombre+', tiene '+mo+' semana'+(mo>1?'s':'')+' sin pagar en JR MOTOS.\nPlaca: '+m.placa+'\nCuota: $'+(m.cuota||0).toLocaleString('es-CO')+'/semana.\nPor favor realice su pago. 🏍️ JR MOTOS':'Hola '+m.nombre+', le recordamos su cuota semanal de $'+(m.cuota||0).toLocaleString('es-CO')+' en JR MOTOS.\nPlaca: '+m.placa+'\n¡Gracias! 🏍️';waMsgActual=msg;$('wa-tit').textContent='📲 '+m.nombre;$('wa-prev').textContent=msg;$('wa-tel').value=m.tel||'';abrirMb('m-wa');}
+function enviarRecMsg(i){const m=window._recList[i];if(!m)return;const mo=semanasEnMora(m);const msg='Hola '+m.nombre+', tiene '+mo+' semana'+(mo>1?'s':'')+' sin pagar en JR MOTOS.\nPlaca: '+m.placa+'\nPor favor cancele a la brevedad. 🏍️';waMsgActual=msg;$('wa-tit').textContent='🚨 '+m.nombre;$('wa-prev').textContent=msg;$('wa-tel').value=m.tel||'';cerrarMb('m-rec');abrirMb('m-wa');}
+let _tt;
+function toast(msg,dur=2500){const e=$('toast');e.textContent=msg;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>e.classList.remove('show'),dur);}
+document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)cerrarMb(bg.id);}));
+$('log-pass').addEventListener('keydown',e=>{if(e.key==='Enter')auth.login();});
 
 </script>
 </body>
