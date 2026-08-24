@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v30</title>
+<title>JR MOTOS v32</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -484,7 +484,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v30 cargado ✅');
+console.log('JR MOTOS v32 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1106,6 +1106,19 @@ let _tt;
 function toast(msg,dur=2500){const e=$('toast');e.textContent=msg;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>e.classList.remove('show'),dur);}
 document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)cerrarMb(bg.id);}));
 $('log-pass').addEventListener('keydown',e=>{if(e.key==='Enter')auth.login();});
+
+
+const fmtFcorta = f => { if(!f)return ''; const d=new Date(f+'T12:00:00'); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit',timeZone:'America/Bogota'}); };
+function fechasPago(moto){
+  const fechas = [];
+  const ini = new Date(moto.fechaInicio+'T12:00:00');
+  const numSemanas = moto.semanas || 78;
+  for(let i=1; i<=numSemanas; i++){
+    const f = new Date(ini.getTime() + i*7*24*60*60*1000);
+    fechas.push(f.toISOString().slice(0,10));
+  }
+  return fechas;
+}
 
 </script>
 </body>
