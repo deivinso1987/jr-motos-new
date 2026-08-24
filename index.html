@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v26</title>
+<title>JR MOTOS v27</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -484,7 +484,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v26 cargado ✅');
+console.log('JR MOTOS v27 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -514,6 +514,14 @@ function fmtInp(el){const r=el.value.replace(/\D/g,'');el.value=r?parseInt(r).to
 function leerVal(id){return parseFloat(($$(id).value||'').replace(/\./g,'').replace(',','.'))||0;}
 function $$(id){return document.getElementById(id);}
 
+
+function inicioSemana(h){
+  const d=new Date(h+'T12:00:00');
+  const dia=d.getDay(); // 0=dom,6=sab
+  const dias=dia===6?0:(dia+1); // días desde el último sábado
+  const ini=new Date(d.getTime()-dias*24*60*60*1000);
+  return ini.toISOString().slice(0,10);
+}
 function semanasEnMora(m){
   const h=hoy();
   const ini=new Date(m.fechaInicio+'T12:00:00');
@@ -667,13 +675,7 @@ const renders={
     const act=DB.motos.filter(m=>m.estado==='activo');
     const enMora=act.filter(m=>semanasEnMora(m)>=1);
     const alDia=act.filter(m=>semanasEnMora(m)===0);
-    // Semana de cobro: sábado→martes. Calcular inicio (último sábado)
-    const hDate=new Date(h+'T12:00:00');
-    const diaSem=hDate.getDay(); // 0=dom,1=lun,2=mar,3=mie,4=jue,5=vie,6=sab
-    // Días desde el último sábado: sab=0, dom=1, lun=2, mar=3, mie=4, jue=5, vie=6
-    const diasDesdeSab=diaSem===6?0:(diaSem+1);
-    const inicioSem=new Date(hDate.getTime()-diasDesdeSab*24*60*60*1000);
-    const inicioSemStr=inicioSem.toISOString().slice(0,10);
+    const inicioSemStr=inicioSemana(h);
     const pagsSem=DB.pagos.filter(p=>p.fecha>=inicioSemStr&&p.fecha<=h);
     const totSem=pagsSem.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
     // Total cobrado histórico (todos los pagos de motos activas)
@@ -683,7 +685,7 @@ const renders={
     $('s-mor').textContent=enMora.length;$('s-hoy').textContent=fmt(totSem);
     if($('s-car'))$('s-car').textContent=fmt(cartera);
     if($('s-cob'))$('s-cob').textContent=fmt(totCob);
-    const hace6=new Date(new Date(h+'T12:00:00').getTime()-6*24*60*60*1000).toISOString().slice(0,10);
+    const hace6=inicioSemana(h);
     const pagSem=new Set(DB.pagos.filter(p=>p.fecha>=hace6&&p.fecha<=h).map(p=>p.motoId));
     const porCobrar=act.filter(m=>!pagSem.has(m.id)).sort((a,b)=>semanasEnMora(b)-semanasEnMora(a));
     $('pc-cnt').textContent=porCobrar.length;
@@ -714,10 +716,10 @@ const renders={
   pagos(){
     const h=hoy();
     const d=new Date(h+'T12:00:00');
-    const d6=new Date(new Date(h+'T12:00:00').getTime()-6*24*60*60*1000);
-    $('pag-fecha').textContent=d6.toLocaleDateString('es-CO',{day:'numeric',month:'short'})+' – '+d.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'});
-    const hace6=new Date(new Date(h+'T12:00:00').getTime()-6*24*60*60*1000).toISOString().slice(0,10);
-    const pagosRango=DB.pagos.filter(p=>p.fecha>=hace6&&p.fecha<=h);
+    const ini=inicioSemana(h);
+    const dIni=new Date(ini+'T12:00:00');
+    $('pag-fecha').textContent=dIni.toLocaleDateString('es-CO',{day:'numeric',month:'short'})+' – '+d.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'});
+    const pagosRango=DB.pagos.filter(p=>p.fecha>=ini&&p.fecha<=h);
     const ultimosPorMoto={};
     pagosRango.forEach(p=>{if(!ultimosPorMoto[p.motoId]||p.fecha>ultimosPorMoto[p.motoId].fecha)ultimosPorMoto[p.motoId]=p;});
     const ahoy=Object.values(ultimosPorMoto).sort((a,b)=>b.fecha.localeCompare(a.fecha));
