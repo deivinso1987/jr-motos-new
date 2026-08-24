@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v41</title>
+<title>JR MOTOS v42</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -640,6 +640,25 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 </div>
 
 <!-- TOAST -->
+<div class="mb" id="m-epago"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2">✏️ Editar Pago</div>
+  <input type="hidden" id="ep-id">
+  <input type="hidden" id="ep-moto-id">
+  <div class="r2">
+    <div class="fg"><label>Valor *</label><input type="text" id="ep-val" oninput="fmtInp(this)" inputmode="numeric"></div>
+    <div class="fg"><label>Fecha</label><input type="date" id="ep-fec"></div>
+  </div>
+  <div class="fg"><label>Método</label>
+    <select id="ep-met"><option>Nequi</option><option>Transferencia</option><option>Efectivo</option></select>
+  </div>
+  <div class="fg"><label>Observación</label><input type="text" id="ep-obs"></div>
+  <div class="gap2" style="margin-top:12px;">
+    <button class="btn btn-out" onclick="cerrarMb('m-epago')">Cancelar</button>
+    <button class="btn btn-ve" onclick="acc.guardarEdicionPago()">💾 Guardar cambios</button>
+  </div>
+</div></div>
+
 <div id="toast"></div>
 
 <div id="toast"></div>
@@ -651,7 +670,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v41 OK');
+console.log('JR MOTOS v42 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -675,7 +694,8 @@ let waMsgActual = '';
 
 // ── HELPERS ───────────────────────────────────────
 const $   = id => document.getElementById(id);
-const fmt = n  => '$'+Math.round(n||0).toLocaleString('es-CO');
+const fmt = n  => '$'+(Math.round((n||0)/1000)).toLocaleString('es-CO')+'k';
+const fmtFull = n => '$'+Math.round(n||0).toLocaleString('es-CO');
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const hoy = () => { const now=new Date(); const bog=new Date(now.getTime()-5*60*60*1000); return bog.toISOString().slice(0,10); };
 const fmtF  = f => { if(!f)return ''; const d=new Date(f+'T12:00:00'); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric',timeZone:'America/Bogota'}); };
@@ -1464,6 +1484,16 @@ const modales={
     abrirMb('m-det');
   },
 
+  editarPago(pagoId){
+    const p=DB.pagos.find(x=>x.id===pagoId);if(!p)return;
+    $('ep-id').value=pagoId;
+    $('ep-moto-id').value=p.motoId;
+    $('ep-val').value=parseInt(p.monto).toLocaleString('es-CO');
+    $('ep-fec').value=p.fecha;
+    $('ep-met').value=p.metodo||'Nequi';
+    $('ep-obs').value=p.obs||'';
+    abrirMb('m-epago');
+  },
   verRecibo(pagoId){
     const p=DB.pagos.find(x=>x.id===pagoId);if(!p)return;
     const m=DB.motos.find(x=>x.id===p.motoId);
@@ -1608,6 +1638,23 @@ const acc={
     setTimeout(()=>modales.verRecibo(p.id), 400);
   },
 
+  async guardarEdicionPago(){
+    const pagId=$('ep-id').value;
+    const motoId=$('ep-moto-id').value;
+    const p=DB.pagos.find(x=>x.id===pagId);if(!p)return;
+    const val=leerVal('ep-val');
+    if(!val||val<=0){toast('⚠️ Valor inválido');return;}
+    p.monto=val;
+    p.fecha=$('ep-fec').value;
+    p.metodo=$('ep-met').value;
+    p.obs=$('ep-obs').value.trim();
+    cerrarMb('m-epago');
+    const ok=await fsSet('pagos',pagId,{...p});
+    await cargar();
+    renders.inicio();
+    toast(ok?'✅ Pago actualizado':'✅ Guardado localmente');
+    modales.verMoto(motoId);
+  },
   async eliminarPago(pagId,motoId){
     if(ROL!=='admin'){toast('⛔ Solo admin puede eliminar');return;}
     if(!confirm('¿Eliminar este pago?'))return;
