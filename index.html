@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v25</title>
+<title>JR MOTOS v26</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -384,6 +384,23 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
   <button class="btn btn-out" style="margin-top:10px;" onclick="cerrarMb('m-rec')">Cerrar</button>
 </div></div>
 
+<div class="mb" id="m-epago"><div class="mo">
+  <div class="mh"></div><div class="mt2">✏️ Editar Pago</div>
+  <input type="hidden" id="ep-id">
+  <div class="r2">
+    <div class="fg"><label>Valor *</label><input type="text" id="ep-val" oninput="fmtInp(this)" inputmode="numeric"></div>
+    <div class="fg"><label>Fecha</label><input type="date" id="ep-fec"></div>
+  </div>
+  <div class="fg"><label>Método</label>
+    <select id="ep-metodo"><option value="Nequi">Nequi</option><option value="Transferencia">Transferencia</option><option value="Efectivo">Efectivo</option></select>
+  </div>
+  <div class="fg"><label>Observación</label><input type="text" id="ep-obs"></div>
+  <div class="gap2">
+    <button class="btn btn-out" onclick="cerrarMb('m-epago')">Cancelar</button>
+    <button class="btn btn-ve" onclick="acc.guardarEdicionPago()">💾 Guardar</button>
+  </div>
+</div></div>
+
 <div class="mb" id="m-wa"><div class="mo">
   <div class="mh"></div><div class="mt2" id="wa-tit">📲 WhatsApp</div>
   <div id="wa-prev" style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:10px;padding:14px;margin-bottom:14px;font-size:.85rem;line-height:1.8;color:#1b5e20;white-space:pre-line;"></div>
@@ -467,7 +484,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v25 cargado ✅');
+console.log('JR MOTOS v26 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -830,35 +847,65 @@ const modales={
     const saldo=Math.max(0,totalCred-totPag);
     const mo=semanasEnMora(m);
     const pct=Math.min(100,Math.round((pags.length/(m.semanas||78))*100));
-    const moraHtml=mo>0?'<div style="background:var(--rob);border:1px solid #ffcdd2;border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.85rem;color:var(--ro);">🚨 EN MORA — '+mo+' semana'+(mo>1?'s':'')+' sin pagar</div></div>':'<div style="background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:.85rem;color:var(--ve);">✅ AL DÍA</div>';
+    const fill=mo>=6?'var(--roc)':(mo>=3?'var(--moc)':'var(--vec)');
     $('d-tit').textContent=m.modelo+' · '+(m.nombre||'').toUpperCase()+(mo>0?' 🚨':'');
     const esAdmin=ROL==='admin';
     $('d-btns-admin').style.display=esAdmin?'grid':'none';
     $('d-btns-cobrador').style.display=esAdmin?'none':'block';
-    $('d-bod').innerHTML=moraHtml
-      +'<div class="det-row"><span class="det-l">Cliente</span><span class="det-v">'+(m.nombre||'').toUpperCase()+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Placa</span><span class="det-v">'+m.placa+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Cédula</span><span class="det-v">'+(m.cedula||'—')+'</span></div>'
-      +'<div class="det-row"><span class="det-l">WhatsApp</span><span class="det-v">'+(m.tel||'—')+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Cuota semanal</span><span class="det-v" style="color:var(--az)">'+fmtCOP(m.cuota)+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Día de pago</span><span class="det-v">'+DIAS_NOMBRE[m.diaPago||'sabado']+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Total crédito</span><span class="det-v">'+fmtCOP(totalCred)+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Total pagado</span><span class="det-v" style="color:var(--vec)">'+fmtCOP(totPag)+'</span></div>'
-      +'<div class="det-row"><span class="det-l">Saldo pendiente</span><span class="det-v">'+fmtCOP(saldo)+'</span></div>'
-      +'<div class="det-row" style="border:none"><span class="det-l">Avance</span><span class="det-v">'+pct+'% ('+pags.length+'/'+m.semanas+' pagos)</span></div>'
-      +'<div style="height:7px;background:#f0f0f0;border-radius:4px;margin:4px 0 16px;"><div style="height:7px;background:'+(mo>0?'var(--roc)':'var(--vec)')+';border-radius:4px;width:'+pct+'%;"></div></div>'
-      +(esAdmin?(()=>{
-      const histHtml=!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos</div>':
-        pags.map(p=>{const pid=p.id;return `<div class="pago-row" onclick="modales.verRecibo('${pid}')" style="cursor:pointer;"><div><div style="font-size:.85rem;font-weight:600;">${fmtCOP(p.monto)}</div><div style="font-size:.72rem;color:var(--gt);">${fmtF(p.fecha)}${p.metodo?' · '+p.metodo:''}${p.obs?' · '+p.obs:''}</div></div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;color:var(--az);">🧾</span><button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="event.stopPropagation();acc.eliminarPago('${pid}')">✕</button></div></div>`;}).join('');
-      return '<div class="sec-title">Historial</div>'+histHtml;
-    })():'');
+    $('d-bod').innerHTML=
+      (mo>0?`<div style="background:var(--rob);border:1px solid #ffcdd2;border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.85rem;color:var(--ro);">🚨 EN MORA — ${mo} semana${mo>1?'s':''} sin pagar</div></div>`
+           :`<div style="background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:.85rem;color:var(--ve);">✅ AL DÍA</div>`)
+      +`<div class="det-row"><span class="det-l">Placa</span><span class="det-v">${m.placa}</span></div>`
+      +`<div class="det-row"><span class="det-l">Cédula</span><span class="det-v">${m.cedula||'—'}</span></div>`
+      +`<div class="det-row"><span class="det-l">WhatsApp</span><span class="det-v">${m.tel||'—'}</span></div>`
+      +`<div class="det-row"><span class="det-l">Cuota semanal</span><span class="det-v" style="color:var(--az)">${fmtCOP(m.cuota)}</span></div>`
+      +`<div class="det-row"><span class="det-l">Día de pago</span><span class="det-v">${DIAS_NOMBRE[m.diaPago||'sabado']}</span></div>`
+      +`<div class="det-row"><span class="det-l">Total crédito</span><span class="det-v">${fmtCOP(totalCred)}</span></div>`
+      +`<div class="det-row"><span class="det-l">Total pagado</span><span class="det-v" style="color:var(--vec)">${fmtCOP(totPag)}</span></div>`
+      +`<div class="det-row"><span class="det-l">Saldo pendiente</span><span class="det-v">${fmtCOP(saldo)}</span></div>`
+      +`<div class="det-row" style="border:none"><span class="det-l">Avance</span><span class="det-v">${pct}% (${pags.length}/${m.semanas} pagos)</span></div>`
+      +`<div style="height:7px;background:#f0f0f0;border-radius:4px;margin:4px 0 16px;"><div style="height:7px;background:${fill};border-radius:4px;width:${pct}%;"></div></div>`
+      +(esAdmin?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="sec-title" style="margin:0;">📋 Historial (${pags.length} pagos)</div>
+          <span style="font-weight:700;color:var(--vec);font-size:.85rem;">${fmtCOP(totPag)}</span>
+        </div>`
+        +(!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos registrados</div>'
+          :pags.map((p,i)=>{
+            const pid=p.id;
+            const num=pags.length-i;
+            return `<div style="background:#f8f9ff;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--az);">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:.78rem;font-weight:700;color:var(--az);">Semana ${num} · ${fmtF(p.fecha)}</div>
+                  <div style="font-size:.82rem;font-weight:600;color:var(--ne);">${fmtCOP(p.monto)}</div>
+                  <div style="font-size:.7rem;color:var(--gt);">${p.metodo||'—'}${p.obs?' · '+p.obs:''} · ${p.cobrador||'Sistema'}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+                  <button onclick="modales.verRecibo('${pid}')" style="background:var(--az);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">🧾 Recibo</button>
+                  <button onclick="modales.editarPago('${pid}')" style="background:#f0f0f0;color:var(--ne);border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">✏️ Editar</button>
+                  <button onclick="acc.eliminarPago('${pid}')" style="background:var(--rob);color:var(--ro);border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">🗑 Borrar</button>
+                </div>
+              </div>
+            </div>`;
+          }).join(''))
+      :'');
     $('d-pagar').onclick=()=>{cerrarMb('m-det');modales.abrirPago(id);};
-    if(ROL==='admin'){
+    if(esAdmin){
       if(m.estado==='suspendido'){$('d-can').textContent='🔓 Reactivar';$('d-can').className='btn btn-ve';$('d-can').onclick=async()=>{m.estado='activo';await fsSet('motos',m.id,m);cerrarMb('m-det');renders.motos();toast('✅ Reactivado');};}
       else{$('d-can').textContent='✏️ Editar';$('d-can').className='btn btn-az';$('d-can').onclick=()=>{cerrarMb('m-det');modales.abrirMoto(id);};}
-      $('d-wa').onclick=()=>{cerrarMb('m-det');abrirWaMoto(m,semanasEnMora(m));};
-    }else{$('d-wa2').onclick=()=>{cerrarMb('m-det');abrirWaMoto(m,semanasEnMora(m));};}
+      $('d-wa').onclick=()=>{cerrarMb('m-det');abrirWaMoto(m,mo);};
+    }else{$('d-wa2').onclick=()=>{cerrarMb('m-det');abrirWaMoto(m,mo);};}
     abrirMb('m-det');
+  },
+  editarPago(pagoId){
+    const p=DB.pagos.find(x=>x.id===pagoId);if(!p)return;
+    $('ep-id').value=pagoId;
+    $('ep-val').value=parseInt(p.monto).toLocaleString('es-CO');
+    $('ep-fec').value=p.fecha;
+    $('ep-metodo').value=p.metodo||'Nequi';
+    $('ep-obs').value=p.obs||'';
+    cerrarMb('m-det');
+    abrirMb('m-epago');
   },
   verRecibo(pagoId){
     const p=DB.pagos.find(x=>x.id===pagoId);if(!p)return;
