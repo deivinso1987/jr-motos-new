@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v7</title>
+<title>JR MOTOS v37</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -152,6 +152,56 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 .rol-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;}
 .rol-admin{background:rgba(26,35,126,.15);color:var(--az);}
 .rol-cobrador{background:rgba(67,160,71,.12);color:var(--ve);}
+
+.r-header{background:#0a0a0a;padding:22px 24px 18px;display:flex;align-items:center;justify-content:space-between;}
+.r-logo-row{display:flex;align-items:center;gap:12px;}
+.r-logo-box{
+  width:48px;height:48px;background:var(--rojo);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.r-logo-box svg{width:28px;height:28px;}
+.r-brand h2{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#f5f5f0;letter-spacing:.1em;line-height:1;}
+.r-brand p{font-size:.62rem;color:#6b6b6b;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;}
+.r-num-box{text-align:right;}
+.r-num-label{font-size:.6rem;color:#6b6b6b;letter-spacing:.1em;text-transform:uppercase;}
+.r-num-val{font-family:'DM Mono',monospace;font-size:.95rem;color:var(--rojo);font-weight:500;}
+.r-stripe{height:4px;background:linear-gradient(90deg,var(--rojo),var(--naranja));}
+.r-body{padding:22px 24px;}
+.r-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.15em;color:#111;margin-bottom:18px;}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #ccc;border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.r-cell{padding:12px 15px;border-bottom:1px solid #ddd;border-right:1px solid #ddd;}
+.r-cell.e{border-right:none;}
+.r-cell.full{grid-column:1/-1;border-right:none;}
+.r-cell:nth-last-child(-n+2){border-bottom:none;}
+.r-cell.full:last-child{border-bottom:none;}
+.r-cl{font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:3px;}
+.r-cv{font-size:.85rem;font-weight:600;color:#111;}
+.placa-chip{font-family:'DM Mono',monospace;font-size:.85rem;background:#0a0a0a;color:#f5f5f0;display:inline-block;padding:2px 9px;border-radius:4px;letter-spacing:.12em;}
+.r-monto{background:#0a0a0a;border-radius:8px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.r-monto-val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--rojo);}
+.r-monto-label{font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6b6b6b;}
+.r-metodo-pill{background:#2a2a2a;padding:4px 10px;border-radius:20px;font-size:.68rem;color:#aaa;letter-spacing:.06em;text-transform:uppercase;}
+.r-prox{background:#e8f5e9;border-left:3px solid #4caf50;padding:11px 14px;border-radius:0 6px 6px 0;margin-bottom:12px;}
+.r-prox-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#388e3c;margin-bottom:5px;}
+.r-prox p{font-size:.82rem;color:#1b5e20;font-weight:500;line-height:1.55;}
+.r-obs{background:#f0ece4;border-left:3px solid var(--rojo);padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:16px;}
+.r-obs-label{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:4px;}
+.r-obs p{font-size:.82rem;color:#333;line-height:1.5;}
+.r-footer{border-top:1px dashed #bbb;padding:14px 24px 20px;display:flex;align-items:center;justify-content:space-between;}
+.r-sello{display:flex;align-items:center;gap:7px;}
+.r-dot{width:7px;height:7px;border-radius:50%;background:#4caf50;box-shadow:0 0 5px #4caf5099;}
+.r-sello span{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4caf50;}
+.r-thanks{font-size:.65rem;color:#888;text-align:right;line-height:1.5;}
+
+/* ── CLIENT DETAIL MODAL ── */
+#client-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:550;overflow-y:auto;padding:16px;}
+#client-modal-bg.open{display:block;}
+.client-detail{background:var(--gris1);border-radius:12px;max-width:520px;margin:0 auto;padding:20px;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:var(--grisT);}
+.empty-icon{font-size:2.5rem;margin-bottom:10px;}
+.empty p{font-size:.85rem;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -435,6 +485,162 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
   <div id="rec-lista"></div>
   <button class="btn btn-out" style="margin-top:10px;" onclick="cerrarMb('m-rec')">Cerrar</button>
 </div></div>
+
+<div id="recibo-render" style="position:fixed;left:-9999px;top:-9999px;width:400px;font-family:'Inter',sans-serif;"></div>
+
+<div id="recibo-modal-bg">
+  <div style="max-width:480px;margin:0 auto;">
+    <div class="recibo-actions-float">
+      <button class="btn btn-green" id="btn-wa-manual" onclick="compartirWhatsApp()">
+        <svg style="width:18px;height:18px;fill:white;flex-shrink:0;" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        REENVIAR POR WHATSAPP
+      </button>
+      <button class="btn btn-blue" onclick="verImagenRecibo()">🖼 VER IMAGEN</button>
+      <button class="btn btn-dark" onclick="closeReciboModal()">✕ CERRAR</button>
+    </div>
+    <!-- Editar / Eliminar -->
+    <div style="max-width:480px;margin:10px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button class="btn btn-dark" style="background:#1a2a3a;color:#7ec8e3;border:1px solid #1e3a50;" onclick="abrirEditarRecibo()">✏️ EDITAR</button>
+      <button class="btn btn-dark" style="background:#2a0a0a;color:var(--rojo);border:1px solid #3a1010;" onclick="confirmarEliminarRecibo()">🗑 ELIMINAR</button>
+    </div>
+    <div id="recibo-render"></div>
+  </div>
+</div>
+
+<!-- ════════════════ VISOR DE IMAGEN ════════════════ -->
+<div id="img-visor-bg" style="display:none;position:fixed;inset:0;background:#0a0a0a;z-index:700;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:480px;margin:0 auto;padding:12px 12px 48px;">
+
+    <!-- Botones superiores -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;
+         position:sticky;top:0;z-index:10;background:rgba(10,10,10,.95);
+         backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px 0 12px;">
+      <button class="btn btn-dark" style="grid-column:1/-1;" onclick="intentarCompartir()">
+        📤 COMPARTIR IMAGEN
+      </button>
+      <button class="btn btn-dark" onclick="closeImageVisor()">✕ CERRAR</button>
+      <button class="btn btn-dark" onclick="closeImageVisor()">⬅ RECIBO</button>
+    </div>
+
+    <!-- Instrucciones paso a paso para iPhone PWA -->
+    <div id="visor-instrucciones" style="background:#111;border:1px solid #222;border-radius:12px;
+         padding:16px;margin-bottom:14px;font-size:.82rem;line-height:1.7;color:#bbb;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;
+           color:#f5f5f0;margin-bottom:10px;">📱 CÓMO ENVIAR POR WHATSAPP</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="background:#e8001d;color:#fff;border-radius:50%;width:22px;height:22px;
+                display:flex;align-items:center;justify-content:center;font-size:.75rem;
+                font-weight:700;flex-shrink:0;margin-top:1px;">1</span>
+          <span>Mantén <strong style="color:#f5f5f0;">presionada la imagen</strong> de abajo hasta que aparezca el menú</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="background:#e8001d;color:#fff;border-radius:50%;width:22px;height:22px;
+                display:flex;align-items:center;justify-content:center;font-size:.75rem;
+                font-weight:700;flex-shrink:0;margin-top:1px;">2</span>
+          <span>Toca <strong style="color:#25d366;">"Guardar en Fotos"</strong> para guardarla en tu galería</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="background:#e8001d;color:#fff;border-radius:50%;width:22px;height:22px;
+                display:flex;align-items:center;justify-content:center;font-size:.75rem;
+                font-weight:700;flex-shrink:0;margin-top:1px;">3</span>
+          <span>Abre <strong style="color:#25d366;">WhatsApp</strong>, selecciona el cliente, toca el ícono 📎 y envía desde tu galería</span>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #222;font-size:.75rem;color:#555;text-align:center;">
+        O toca <strong style="color:#f5f5f0;">"📤 Compartir Imagen"</strong> arriba para abrir el menú de iOS directamente
+      </div>
+    </div>
+
+    <!-- LA IMAGEN — presionar largo para guardar en iPhone -->
+    <img id="img-visor-img" src="" alt="Recibo JR MOTOS"
+      style="width:100%;border-radius:12px;display:block;
+             box-shadow:0 4px 32px rgba(232,0,29,.15);
+             -webkit-touch-callout:default;"
+      oncontextmenu="return true;">
+
+    <!-- Botón WhatsApp abajo también -->
+    <button class="btn btn-green" style="margin-top:14px;font-size:1rem;" onclick="abrirWaConTexto()">
+      <svg style="width:18px;height:18px;fill:white;flex-shrink:0;" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      ABRIR WHATSAPP (SIN IMAGEN)
+    </button>
+    <div style="text-align:center;font-size:.7rem;color:#444;margin-top:6px;">
+      Guarda la imagen primero (paso 1 y 2), luego adjúntala en WhatsApp
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ MODAL: EDITAR RECIBO ════════════════ -->
+<div class="modal-bg" id="modal-editar-bg" onclick="closeEditarModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      ✏️ Editar Recibo
+      <button class="modal-close" onclick="closeEditarModal()">✕</button>
+    </div>
+    <div class="row2">
+      <div class="fg">
+        <label>Fecha del Pago</label>
+        <input type="date" id="ed-fecha">
+      </div>
+      <div class="fg">
+        <label>Semana N°</label>
+        <input type="number" id="ed-semana" placeholder="Ej: 5" min="1">
+      </div>
+    </div>
+    <div class="fg">
+      <label>Nombre Completo *</label>
+      <input type="text" id="ed-nombre" placeholder="Nombre completo del cliente">
+    </div>
+    <div class="row2">
+      <div class="fg">
+        <label>Cédula / Documento</label>
+        <input type="text" id="ed-cedula" placeholder="Número">
+      </div>
+      <div class="fg">
+        <label>Placa de la Moto *</label>
+        <input type="text" id="ed-placa" placeholder="ABC-123" style="text-transform:uppercase">
+      </div>
+    </div>
+    <div class="fg">
+      <label>Modelo / Referencia</label>
+      <input type="text" id="ed-modelo" placeholder="Ej: AKT NKD 125">
+    </div>
+    <div class="row2">
+      <div class="fg">
+        <label>Valor Pagado ($) *</label>
+        <input type="text" id="ed-monto" placeholder="Ej: 250.000">
+      </div>
+      <div class="fg">
+        <label>Método de Pago</label>
+        <select id="ed-metodo">
+          <option>Efectivo</option>
+          <option>Nequi</option>
+          <option>Daviplata</option>
+          <option>Transferencia</option>
+          <option>Cheque</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>WhatsApp del Cliente</label>
+      <input type="tel" id="ed-tel" placeholder="3001234567">
+    </div>
+    <div class="fg">
+      <label>Observaciones (opcional)</label>
+      <textarea id="ed-obs" placeholder="Ej: Pago con anticipación..."></textarea>
+    </div>
+    <div class="gap-row" style="margin-top:4px;">
+      <button class="btn btn-dark" onclick="closeEditarModal()">CANCELAR</button>
+      <button class="btn btn-red" onclick="guardarEdicionRecibo()">💾 GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <div id="toast"></div>
 
@@ -1011,31 +1217,21 @@ const modales={
     const m=DB.motos.find(x=>x.id===p.motoId);
     const numRecibo=p.recibo||p.id.slice(-4).toUpperCase();
     const pagados=DB.pagos.filter(x=>x.motoId===p.motoId).length;
-    const proximoPago=new Date(new Date(p.fecha+'T12:00:00').getTime()+7*24*60*60*1000);
-    const proxFmt=proximoPago.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const prox=new Date(new Date(p.fecha+'T12:00:00').getTime()+7*24*60*60*1000);
+    const proxFmt=prox.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     const montoStr=(p.monto||0).toLocaleString('es-CO');
-    const msgProx='Hemos recibido su pago de $'+montoStr+' correspondiente a la semana '+pagados+' del '+fmtF(p.fecha)+'. Su próximo pago es el '+proxFmt+'. ¡Gracias por su puntualidad! 🏍️';
-    const r={
-      num:numRecibo, fecha:p.fecha, semana:pagados,
+    currentRecibo={
+      id:p.id, num:numRecibo, fecha:p.fecha, semana:pagados,
       nombre:(p.clienteNombre||'').toUpperCase(),
       cedula:m?m.cedula:'', placa:m?m.placa:'', modelo:m?m.modelo:'',
-      monto:montoStr, metodo:p.metodo||'Nequi', obs:p.obs||'', msgProx
+      monto:montoStr, metodo:p.metodo||'Nequi', tel:m?m.tel:'', obs:p.obs||'',
+      msgProx:'Hemos recibido su pago de $'+montoStr+' correspondiente a la semana '+pagados+' del '+fmtF(p.fecha)+'. Su próximo pago es el '+proxFmt+'. ¡Gracias por su puntualidad! 🏍️'
     };
-    currentRecibo={...r,tel:m?m.tel:'',id:pagoId};
     ultimaImagenURL=null;
-    renderReciboHTML(r);
-    cerrarMb('m-det');
-    toast('⏳ Generando recibo...');
-    setTimeout(async()=>{
-      try{
-        const {canvas}=await capturarImagenBlob();
-        ultimaImagenURL=canvas.toDataURL('image/png');
-        document.getElementById('img-visor-img').src=ultimaImagenURL;
-        document.getElementById('img-visor-bg').style.display='block';
-        document.getElementById('img-visor-bg').scrollTop=0;
-        toast('✅ Imagen lista');
-      }catch(e){toast('❌ Error: '+e.message);console.error(e);}
-    },400);
+    renderReciboHTML(currentRecibo);
+    document.getElementById('recibo-modal-bg').classList.add('open');
+    toast('⏳ Generando imagen para WhatsApp...');
+    setTimeout(()=>compartirWhatsApp(),600);
   },
 
 
@@ -1244,6 +1440,183 @@ function toast(msg,dur=2500){const e=$('toast');e.textContent=msg;e.classList.ad
 document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)cerrarMb(bg.id);}));
 $('log-pass').addEventListener('keydown',e=>{if(e.key==='Enter')auth.login();});
 
+
+
+
+
+
+// ── RECIBO ──
+function renderReciboHTML(r){
+  const semText=r.semana?`Semana N° ${r.semana}`:'N/A';
+  document.getElementById('recibo-render').innerHTML=`
+    <div class="r-header">
+      <div class="r-logo-row">
+        <div class="r-logo-box">
+          <svg viewBox="0 0 40 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="27" r="6" stroke="white" stroke-width="2.5" fill="none"/>
+            <circle cx="32" cy="27" r="6" stroke="white" stroke-width="2.5" fill="none"/>
+            <path d="M8 27 L14 14 L22 14 L32 27" stroke="white" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+            <path d="M22 14 L28 10 L32 14" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M14 14 L20 10 L26 10" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="20" cy="20" r="3" fill="white"/>
+          </svg>
+        </div>
+        <div class="r-brand">
+          <h2>JR MOTOS</h2>
+          <p>Crédito de motos</p>
+        </div>
+      </div>
+      <div class="r-num-box">
+        <div class="r-num-label">Recibo N°</div>
+        <div class="r-num-val">${r.num}</div>
+      </div>
+    </div>
+    <div class="r-stripe"></div>
+    <div class="r-body">
+      <div class="r-title">Comprobante de Pago</div>
+      <div class="r-grid">
+        <div class="r-cell"><div class="r-cl">Fecha de Pago</div><div class="r-cv">${fmtFecha(r.fecha)}</div></div>
+        <div class="r-cell e"><div class="r-cl">Semana N°</div><div class="r-cv">${semText}</div></div>
+        <div class="r-cell full"><div class="r-cl">Nombre del Cliente</div><div class="r-cv">${r.nombre}</div></div>
+        <div class="r-cell"><div class="r-cl">Cédula / Documento</div><div class="r-cv">${r.cedula||'No especificado'}</div></div>
+        <div class="r-cell e"><div class="r-cl">Placa</div><div class="r-cv"><span class="placa-chip">${r.placa}</span></div></div>
+        <div class="r-cell full"><div class="r-cl">Modelo / Referencia</div><div class="r-cv">${r.modelo||'No especificado'}</div></div>
+      </div>
+      <div class="r-monto">
+        <div>
+          <div class="r-monto-label">Valor Recibido</div>
+          <div class="r-monto-val">$ ${r.monto}</div>
+        </div>
+        <div class="r-metodo-pill">${r.metodo}</div>
+      </div>
+      <div class="r-prox">
+        <div class="r-prox-label">✅ Confirmación y próximo pago</div>
+        <p>${r.msgProx}</p>
+      </div>
+      ${r.obs?`<div class="r-obs"><div class="r-obs-label">Observaciones</div><p>${r.obs}</p></div>`:''}
+    </div>
+    <div class="r-footer">
+      <div class="r-sello"><div class="r-dot"></div><span>Pago Confirmado</span></div>
+      <div class="r-thanks">¡Gracias por su pago puntual!<br><span style="color:#999">JR MOTOS – Tu moto, tu crédito.</span></div>
+    </div>`;
+}
+
+function closeReciboModal(){
+  document.getElementById('recibo-modal-bg').classList.remove('open');
+  ultimaImagenURL = null;
+}
+
+async function capturarImagenBlob(){
+  const el = document.getElementById('recibo-render');
+  const canvas = await html2canvas(el, {
+    scale: 2.5,
+    backgroundColor: '#ede8df',
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+  });
+  ultimaImagenURL = canvas.toDataURL('image/png');
+  // Persistir imagen en IndexedDB para recuperarla después
+  if(currentRecibo) await dbSaveImagen(currentRecibo.id, ultimaImagenURL);
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  return { canvas, blob };
+}
+
+async function verImagenRecibo(){
+  toast('⏳ Cargando imagen...');
+  try {
+    // Intentar cargar imagen guardada primero
+    if(!ultimaImagenURL && currentRecibo) {
+      ultimaImagenURL = await dbGetImagen(currentRecibo.id);
+    }
+    // Si no existe en DB, regenerarla renderizando el recibo
+    if(!ultimaImagenURL) {
+      if(!document.getElementById('recibo-render').innerHTML.trim()) {
+        if(currentRecibo) renderReciboHTML(currentRecibo);
+        await new Promise(r => setTimeout(r, 400));
+      }
+      await capturarImagenBlob();
+    }
+    document.getElementById('img-visor-img').src = ultimaImagenURL;
+    document.getElementById('img-visor-bg').style.display = 'block';
+    document.getElementById('img-visor-bg').scrollTop = 0;
+    toast('✅ Imagen lista');
+  } catch(e) { toast('❌ Error: ' + e.message); }
+}
+
+function closeImageVisor(){
+  document.getElementById('img-visor-bg').style.display = 'none';
+}
+
+// Intenta Web Share API; si falla muestra instrucciones manuales
+async function intentarCompartir(){
+  if(!ultimaImagenURL){ toast('⏳ Generando imagen...'); await verImagenRecibo(); return; }
+  try {
+    // Convertir dataURL a blob
+    const resp = await fetch(ultimaImagenURL);
+    const blob = await resp.blob();
+    const file = new File([blob], 'JR-MOTOS-Recibo.png', { type: 'image/png' });
+    // Intentar API nativa (funciona en Safari fuera de PWA y en algunos contextos PWA)
+    if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ title: 'JR MOTOS – Recibo', files: [file] });
+      toast('✅ ¡Imagen compartida!');
+    } else {
+      // En PWA de iPhone: no se puede compartir archivo programáticamente
+      // Mostrar instrucciones — el usuario presiona largo la imagen
+      toast('👇 Presiona la imagen → "Guardar en Fotos"', 4000);
+    }
+  } catch(e) {
+    if(e.name !== 'AbortError'){
+      toast('👇 Presiona la imagen → "Guardar en Fotos"', 4000);
+    }
+  }
+}
+
+// Abrir WhatsApp solo con el texto (sin imagen — el usuario adjunta desde galería)
+function abrirWaConTexto(){
+  if(!currentRecibo){ toast('⚠️ Sin recibo activo'); return; }
+  const r = currentRecibo;
+  const semText = r.semana ? `Semana N° ${r.semana}` : 'N/A';
+  const tel = r.tel ? `57${r.tel}` : '';
+  const waText =
+    `🏍️ *JR MOTOS – Comprobante de Pago*\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `📋 *Recibo N°:* ${r.num}\n` +
+    `📅 *Fecha:* ${fmtFecha(r.fecha)}\n` +
+    `🗓️ *${semText}*\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `👤 *Cliente:* ${r.nombre}\n` +
+    (r.cedula ? `🪪 *Cédula:* ${r.cedula}\n` : '') +
+    `🏍️ *Placa:* ${r.placa}\n` +
+    (r.modelo ? `🔧 *Modelo:* ${r.modelo}\n` : '') +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `💰 *Valor pagado:* $${r.monto}\n` +
+    `💳 *Método:* ${r.metodo}\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `✅ ${r.msgProx}\n` +
+    (r.obs ? `\n📝 *Nota:* ${r.obs}\n` : '') +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `_JR MOTOS – Tu moto, tu crédito_ 🤝`;
+  const url = tel
+    ? `https://wa.me/${tel}?text=${encodeURIComponent(waText)}`
+    : `https://wa.me/?text=${encodeURIComponent(waText)}`;
+  window.open(url, '_blank');
+}
+
+async function compartirWhatsApp(){
+  if(!currentRecibo){ toast('⚠️ Sin recibo activo'); return; }
+  toast('⏳ Generando imagen...');
+  try {
+    await capturarImagenBlob();
+    document.getElementById('img-visor-img').src = ultimaImagenURL;
+    document.getElementById('img-visor-bg').style.display = 'block';
+    document.getElementById('img-visor-bg').scrollTop = 0;
+    toast('✅ Imagen lista — presiona la imagen para guardarla', 3500);
+  } catch(e) {
+    if(e.name !== 'AbortError') toast('❌ Error: ' + e.message);
+  }
+}
+
 async function intentarCompartir(){
   if(!ultimaImagenURL){ toast('⏳ Generando imagen...'); await verImagenRecibo(); return; }
   try {
@@ -1313,7 +1686,6 @@ async function compartirWhatsApp(){
 
 function closeImageVisor(){
   document.getElementById('img-visor-bg').style.display='none';
-  ultimaImagenURL=null;
 }
 
 </script>
