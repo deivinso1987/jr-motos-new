@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v19</title>
+<title>JR MOTOS v20</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -871,7 +871,7 @@ const modales={
     toast('⏳ Generando recibo...');
     setTimeout(async()=>{
       try{
-        const canvas=await html2canvas(document.getElementById('recibo-render'),{scale:2.5,backgroundColor:'#ede8df',useCORS:true,allowTaint:true,logging:false});
+        const {canvas}=await capturarImagenBlob();
         ultimaImagenURL=canvas.toDataURL('image/png');
         document.getElementById('img-visor-img').src=ultimaImagenURL;
         document.getElementById('img-visor-bg').style.display='block';
@@ -959,4 +959,20 @@ async function btnReimportar(){
 
 </script>
 </body>
-</html>
+</html
+
+async function capturarImagenBlob(){
+  const el = document.getElementById('recibo-render');
+  const canvas = await html2canvas(el, {
+    scale: 2.5,
+    backgroundColor: '#ede8df',
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+  });
+  ultimaImagenURL = canvas.toDataURL('image/png');
+  // Persistir imagen en IndexedDB para recuperarla después
+  if(currentRecibo) await dbSaveImagen(currentRecibo.id, ultimaImagenURL);
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  return { canvas, blob };
+}>
