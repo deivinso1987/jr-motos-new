@@ -842,7 +842,64 @@ const modales={
       const histHtml=!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos</div>':
         pags.map(p=>{const pid=p.id;return `<div class="pago-row" onclick="modales.verRecibo('${pid}')" style="cursor:pointer;"><div><div style="font-size:.85rem;font-weight:600;">${fmtCOP(p.monto)}</div><div style="font-size:.72rem;color:var(--gt);">${fmtF(p.fecha)}${p.metodo?' · '+p.metodo:''}${p.obs?' · '+p.obs:''}</div></div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;color:var(--az);">🧾</span><button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="event.stopPropagation();acc.eliminarPago('${pid}')">✕</button></div></div>`;}).join('');
       return '<div class="sec-title">Historial</div>'+histHtml;
-    })():'');}}
+    })():'');
+    $('d-pagar').onclick=()=>{cerrarMb('m-det');modales.abrirPago(id);};
+    if(ROL==='admin'){
+      if(m.estado==='suspendido'){$('d-can').textContent='🔓 Reactivar';$('d-can').className='btn btn-ve';$('d-can').onclick=async()=>{m.estado='activo';await fsSet('motos',m.id,m);cerrarMb('m-det');renders.motos();toast('✅ Reactivado');};}
+      else{$('d-can').textContent='✏️ Editar';$('d-can').className='btn btn-az';$('d-can').onclick=()=>{cerrarMb('m-det');modales.abrirMoto(id);};}
+      $('d-wa').onclick=()=>{cerrarMb('m-det');abrirWaMoto(m,semanasEnMora(m));};
+    }else{$('d-wa2').onclick=()=>{cerrarMb('m-det');abrirWaMoto(m,semanasEnMora(m));};}
+    abrirMb('m-det');
+  },
+  verRecibo(pagoId){
+    const p=DB.pagos.find(x=>x.id===pagoId);if(!p)return;
+    const m=DB.motos.find(x=>x.id===p.motoId);
+    const numRecibo=p.recibo||p.id.slice(-4).toUpperCase();
+    const pagados=DB.pagos.filter(x=>x.motoId===p.motoId).length;
+    const totalCred=m?(m.cuota||0)*(m.semanas||78):0;
+    const totPag=DB.pagos.filter(x=>x.motoId===p.motoId).reduce((s,x)=>s+(parseFloat(x.monto)||0),0);
+    const saldo=Math.max(0,totalCred-totPag);
+    const proximoPago=new Date(new Date(p.fecha+'T12:00:00').getTime()+7*24*60*60*1000);
+    const proxFmt=proximoPago.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const montoStr=(p.monto||0).toLocaleString('es-CO');
+    const msgProx='Hemos recibido su pago de $'+montoStr+' correspondiente a la semana '+pagados+' del '+fmtF(p.fecha)+'. Su próximo pago es el '+proxFmt+'. ¡Gracias por su puntualidad! 🏍️';
+    const r={num:numRecibo,fecha:p.fecha,semana:pagados,nombre:(p.clienteNombre||'').toUpperCase(),cedula:m?m.cedula:'',placa:m?m.placa:'',modelo:m?m.modelo:'',monto:montoStr,metodo:p.metodo||'Nequi',obs:p.obs||'',msgProx};
+    currentRecibo={...r,tel:m?m.tel:'',id:pagoId};
+    ultimaImagenURL=null;
+    renderReciboHTML(r);
+    cerrarMb('m-det');
+    toast('⏳ Generando recibo...');
+    setTimeout(async()=>{
+      try{
+        const canvas=await html2canvas(document.getElementById('recibo-render'),{scale:2.5,backgroundColor:'#ede8df',useCORS:true,allowTaint:true,logging:false});
+        ultimaImagenURL=canvas.toDataURL('image/png');
+        document.getElementById('img-visor-img').src=ultimaImagenURL;
+        document.getElementById('img-visor-bg').style.display='block';
+        document.getElementById('img-visor-bg').scrollTop=0;
+        toast('✅ Recibo generado');
+      }catch(e){toast('❌ Error: '+e.message);console.error(e);}
+    },400);
+  },
+  abrirRecordatorios(){
+    const act=DB.motos.filter(m=>m.estado==='activo');
+    const enMora=act.filter(m=>semanasEnMora(m)>=1).sort((a,b)=>semanasEnMora(b)-semanasEnMora(a));
+    const res=$('rec-res');
+    if(!enMora.length){
+      res.style.cssText='background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.85rem;color:var(--ve);';
+      res.textContent='✅ Todos al día.';$('rec-lista').innerHTML='';
+    }else{
+      res.style.cssText='background:var(--amb);border:1px solid #ffcc80;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.85rem;color:var(--am);';
+      res.textContent='🚨 '+enMora.length+' cliente'+(enMora.length>1?'s':'')+' en mora.';
+      window._recList=enMora;
+      $('rec-lista').innerHTML=enMora.map((m,i)=>{
+        const mo=semanasEnMora(m);
+        return `<div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.06);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-weight:700;font-size:.88rem;">${m.modelo} · ${(m.nombre||'').toUpperCase()}</div><span class="badge ${mo>=6?'ro':(mo>=3?'mo':'am')}">Mora ${mo}sem</span></div><div style="font-size:.72rem;color:var(--gt);margin-bottom:8px;">${m.placa}${m.tel?' · 📞 '+m.tel:''}</div><button onclick="enviarRecMsg(${i})" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;font-weight:700;cursor:pointer;">📲 Enviar mensaje</button></div>`;
+      }).join('');
+    }
+    abrirMb('m-rec');
+  }
+};
+
 async function fsSet(col,id,obj){
   try{await FS.collection(col).doc(id).set({...obj,_ts:firebase.firestore.FieldValue.serverTimestamp()});bk();return true;}
   catch(e){console.error(e);bk();return false;}
