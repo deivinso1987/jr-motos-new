@@ -438,6 +438,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 
 <div id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -1010,42 +1011,33 @@ const modales={
     const m=DB.motos.find(x=>x.id===p.motoId);
     const numRecibo=p.recibo||p.id.slice(-4).toUpperCase();
     const pagados=DB.pagos.filter(x=>x.motoId===p.motoId).length;
-    const totalCred=m?(m.cuota||0)*(m.semanas||78):0;
-    const totPag=DB.pagos.filter(x=>x.motoId===p.motoId).reduce((s,x)=>s+(parseFloat(x.monto)||0),0);
-    const saldo=Math.max(0,totalCred-totPag);
-    $('recibo-content').innerHTML=`
-      <div class="recibo-box">
-        <div class="recibo-header">
-          <div class="recibo-title">🏍️ JR MOTOS</div>
-          <div class="recibo-num">Recibo N° ${numRecibo} · Semana ${pagados}</div>
-        </div>
-        <div class="recibo-row"><span>Cliente:</span><span>${p.clienteNombre||'—'}</span></div>
-        <div class="recibo-row"><span>Placa:</span><span>${m?m.placa:'—'}</span></div>
-        <div class="recibo-row"><span>Modelo:</span><span>${m?m.modelo:'—'}</span></div>
-        <div class="recibo-row"><span>Fecha:</span><span>${fmtF(p.fecha)}</span></div>
-        <div class="recibo-row"><span>Método:</span><span>${p.metodo||'—'}</span></div>
-        ${p.obs?`<div class="recibo-row"><span>Obs:</span><span>${p.obs}</span></div>`:''}
-        <div class="recibo-row"><span>Pagos realizados:</span><span>${pagados}/${m?m.semanas:78}</span></div>
-        <div class="recibo-row"><span>Saldo pendiente:</span><span>${fmt(saldo)}</span></div>
-        <div class="recibo-row"><span>VALOR PAGADO:</span><span>${fmt(p.monto)}</span></div>
-        <div class="recibo-firma">Gracias por su pago · JR MOTOS</div>
-      </div>`;
-    $('recibo-wa').onclick=()=>{
-      const msg='🏍️ *RECIBO JR MOTOS*\n\n'
-        +'Recibo N°: '+numRecibo+'\n'
-        +'Cliente: '+(p.clienteNombre||'—')+'\n'
-        +'Placa: '+(m?m.placa:'—')+'\n'
-        +'Fecha: '+fmtF(p.fecha)+'\n'
-        +'Método: '+(p.metodo||'—')+'\n'
-        +'Pagos: '+pagados+'/'+(m?m.semanas:78)+'\n'
-        +'Saldo: '+fmt(saldo)+'\n'
-        +'*VALOR: '+fmt(p.monto)+'*\n\n'
-        +'_Gracias por su pago · JR MOTOS_';
-      const tel=m&&m.tel?m.tel:'';
-      window.open('https://wa.me/57'+tel.replace(/\D/g,'')+'?text='+encodeURIComponent(msg),'_blank');
+    const proximoPago=new Date(new Date(p.fecha+'T12:00:00').getTime()+7*24*60*60*1000);
+    const proxFmt=proximoPago.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const montoStr=(p.monto||0).toLocaleString('es-CO');
+    const msgProx='Hemos recibido su pago de $'+montoStr+' correspondiente a la semana '+pagados+' del '+fmtF(p.fecha)+'. Su próximo pago es el '+proxFmt+'. ¡Gracias por su puntualidad! 🏍️';
+    const r={
+      num:numRecibo, fecha:p.fecha, semana:pagados,
+      nombre:(p.clienteNombre||'').toUpperCase(),
+      cedula:m?m.cedula:'', placa:m?m.placa:'', modelo:m?m.modelo:'',
+      monto:montoStr, metodo:p.metodo||'Nequi', obs:p.obs||'', msgProx
     };
-    cerrarMb('m-det'); abrirMb('m-recibo');
+    currentRecibo={...r,tel:m?m.tel:'',id:pagoId};
+    ultimaImagenURL=null;
+    renderReciboHTML(r);
+    cerrarMb('m-det');
+    toast('⏳ Generando recibo...');
+    setTimeout(async()=>{
+      try{
+        const {canvas}=await capturarImagenBlob();
+        ultimaImagenURL=canvas.toDataURL('image/png');
+        document.getElementById('img-visor-img').src=ultimaImagenURL;
+        document.getElementById('img-visor-bg').style.display='block';
+        document.getElementById('img-visor-bg').scrollTop=0;
+        toast('✅ Imagen lista');
+      }catch(e){toast('❌ Error: '+e.message);console.error(e);}
+    },400);
   },
+
 
   abrirRecordatorios(){
     const act=DB.motos.filter(m=>m.estado==='activo');
@@ -1251,6 +1243,79 @@ function toast(msg,dur=2500){const e=$('toast');e.textContent=msg;e.classList.ad
 // Cerrar modales al tocar fondo
 document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)cerrarMb(bg.id);}));
 $('log-pass').addEventListener('keydown',e=>{if(e.key==='Enter')auth.login();});
+
+async function intentarCompartir(){
+  if(!ultimaImagenURL){ toast('⏳ Generando imagen...'); await verImagenRecibo(); return; }
+  try {
+    // Convertir dataURL a blob
+    const resp = await fetch(ultimaImagenURL);
+    const blob = await resp.blob();
+    const file = new File([blob], 'JR-MOTOS-Recibo.png', { type: 'image/png' });
+    // Intentar API nativa (funciona en Safari fuera de PWA y en algunos contextos PWA)
+    if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ title: 'JR MOTOS – Recibo', files: [file] });
+      toast('✅ ¡Imagen compartida!');
+    } else {
+      // En PWA de iPhone: no se puede compartir archivo programáticamente
+      // Mostrar instrucciones — el usuario presiona largo la imagen
+      toast('👇 Presiona la imagen → "Guardar en Fotos"', 4000);
+    }
+  } catch(e) {
+    if(e.name !== 'AbortError'){
+      toast('👇 Presiona la imagen → "Guardar en Fotos"', 4000);
+    }
+  }
+}
+
+function abrirWaConTexto(){
+  if(!currentRecibo){ toast('⚠️ Sin recibo activo'); return; }
+  const r = currentRecibo;
+  const semText = r.semana ? `Semana N° ${r.semana}` : 'N/A';
+  const tel = r.tel ? `57${r.tel}` : '';
+  const waText =
+    `🏍️ *JR MOTOS – Comprobante de Pago*\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `📋 *Recibo N°:* ${r.num}\n` +
+    `📅 *Fecha:* ${fmtFecha(r.fecha)}\n` +
+    `🗓️ *${semText}*\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `👤 *Cliente:* ${r.nombre}\n` +
+    (r.cedula ? `🪪 *Cédula:* ${r.cedula}\n` : '') +
+    `🏍️ *Placa:* ${r.placa}\n` +
+    (r.modelo ? `🔧 *Modelo:* ${r.modelo}\n` : '') +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `💰 *Valor pagado:* $${r.monto}\n` +
+    `💳 *Método:* ${r.metodo}\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `✅ ${r.msgProx}\n` +
+    (r.obs ? `\n📝 *Nota:* ${r.obs}\n` : '') +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `_JR MOTOS – Tu moto, tu crédito_ 🤝`;
+  const url = tel
+    ? `https://wa.me/${tel}?text=${encodeURIComponent(waText)}`
+    : `https://wa.me/?text=${encodeURIComponent(waText)}`;
+  window.open(url, '_blank');
+}
+
+async function compartirWhatsApp(){
+  if(!currentRecibo){ toast('⚠️ Sin recibo activo'); return; }
+  toast('⏳ Generando imagen...');
+  try {
+    await capturarImagenBlob();
+    document.getElementById('img-visor-img').src = ultimaImagenURL;
+    document.getElementById('img-visor-bg').style.display = 'block';
+    document.getElementById('img-visor-bg').scrollTop = 0;
+    toast('✅ Imagen lista — presiona la imagen para guardarla', 3500);
+  } catch(e) {
+    if(e.name !== 'AbortError') toast('❌ Error: ' + e.message);
+  }
+}
+
+function closeImageVisor(){
+  document.getElementById('img-visor-bg').style.display='none';
+  ultimaImagenURL=null;
+}
+
 </script>
 </body>
 </html>
