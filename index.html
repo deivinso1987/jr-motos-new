@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v27</title>
+<title>JR MOTOS v28</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -484,7 +484,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v27 cargado ✅');
+console.log('JR MOTOS v28 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -867,30 +867,29 @@ const modales={
       +`<div class="det-row"><span class="det-l">Saldo pendiente</span><span class="det-v">${fmtCOP(saldo)}</span></div>`
       +`<div class="det-row" style="border:none"><span class="det-l">Avance</span><span class="det-v">${pct}% (${pags.length}/${m.semanas} pagos)</span></div>`
       +`<div style="height:7px;background:#f0f0f0;border-radius:4px;margin:4px 0 16px;"><div style="height:7px;background:${fill};border-radius:4px;width:${pct}%;"></div></div>`
-      +(esAdmin?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div class="sec-title" style="margin:0;">📋 Historial (${pags.length} pagos)</div>
-          <span style="font-weight:700;color:var(--vec);font-size:.85rem;">${fmtCOP(totPag)}</span>
-        </div>`
-        +(!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos registrados</div>'
-          :pags.map((p,i)=>{
-            const pid=p.id;
-            const num=pags.length-i;
-            return `<div style="background:#f8f9ff;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--az);">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                  <div style="font-size:.78rem;font-weight:700;color:var(--az);">Semana ${num} · ${fmtF(p.fecha)}</div>
-                  <div style="font-size:.82rem;font-weight:600;color:var(--ne);">${fmtCOP(p.monto)}</div>
-                  <div style="font-size:.7rem;color:var(--gt);">${p.metodo||'—'}${p.obs?' · '+p.obs:''} · ${p.cobrador||'Sistema'}</div>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
-                  <button onclick="modales.verRecibo('${pid}')" style="background:var(--az);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">🧾 Recibo</button>
-                  <button onclick="modales.editarPago('${pid}')" style="background:#f0f0f0;color:var(--ne);border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">✏️ Editar</button>
-                  <button onclick="acc.eliminarPago('${pid}')" style="background:var(--rob);color:var(--ro);border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">🗑 Borrar</button>
-                </div>
+      +`<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;">
+        <div class="sec-title" style="margin:0;">📋 Historial (${pags.length} pagos)</div>
+        <span style="font-weight:700;color:var(--vec);font-size:.85rem;">${fmtCOP(totPag)}</span>
+      </div>`
+      +(!pags.length?'<div style="text-align:center;color:var(--gt);padding:12px;">Sin pagos registrados</div>'
+        :pags.map((p,i)=>{
+          const pid=p.id;
+          const num=pags.length-i;
+          return `<div style="background:#f8f9ff;border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--az);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:.75rem;font-weight:700;color:var(--az);">Semana ${num} · ${fmtF(p.fecha)}</div>
+                <div style="font-size:.9rem;font-weight:700;color:var(--ne);">${fmtCOP(p.monto)}</div>
+                <div style="font-size:.68rem;color:var(--gt);">${p.metodo||'—'}${p.obs?' · '+p.obs:''}</div>
               </div>
-            </div>`;
-          }).join(''))
-      :'');
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;margin-left:8px;">
+                <button onclick="modales.verRecibo('${pid}')" style="background:var(--az);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">🧾 Recibo</button>
+                ${esAdmin?`<button onclick="modales.editarPago('${pid}')" style="background:#e8eaf6;color:var(--az);border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">✏️ Editar</button>
+                <button onclick="acc.eliminarPago('${pid}')" style="background:var(--rob);color:var(--ro);border:none;border-radius:7px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;">🗑 Borrar</button>`:''}
+              </div>
+            </div>
+          </div>`;
+        }).join(''));
     $('d-pagar').onclick=()=>{cerrarMb('m-det');modales.abrirPago(id);};
     if(esAdmin){
       if(m.estado==='suspendido'){$('d-can').textContent='🔓 Reactivar';$('d-can').className='btn btn-ve';$('d-can').onclick=async()=>{m.estado='activo';await fsSet('motos',m.id,m);cerrarMb('m-det');renders.motos();toast('✅ Reactivado');};}
