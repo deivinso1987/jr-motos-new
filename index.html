@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a237e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v23</title>
+<title>JR MOTOS v24</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -467,7 +467,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-console.log('JR MOTOS v23 cargado ✅');
+console.log('JR MOTOS v24 cargado ✅');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -967,8 +967,6 @@ async function capturarImagenBlob(){
     logging: false,
   });
   ultimaImagenURL = canvas.toDataURL('image/png');
-  // Persistir imagen en IndexedDB para recuperarla después
-  if(currentRecibo) await dbSaveImagen(currentRecibo.id, ultimaImagenURL);
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   return { canvas, blob };
 }
@@ -1075,8 +1073,6 @@ async function capturarImagenBlob(){
     logging: false,
   });
   ultimaImagenURL = canvas.toDataURL('image/png');
-  // Persistir imagen en IndexedDB para recuperarla después
-  if(currentRecibo) await dbSaveImagen(currentRecibo.id, ultimaImagenURL);
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   return { canvas, blob };
 }>
