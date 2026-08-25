@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v48</title>
+<title>JR MOTOS v49</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -349,7 +349,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <button onclick="nav.ir('resumen','Resumen')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:600;cursor:pointer;margin-bottom:10px;font-family:'Inter',sans-serif;">← Volver a Resumen</button>
       <div style="font-size:.82rem;opacity:.85;margin-bottom:6px;">💰 GANANCIA (neta de gastos)</div>
       <div style="font-size:2rem;font-weight:800;" id="cj-ganancia">$0</div>
-      <div style="font-size:.72rem;opacity:.7;margin-top:4px;">Total cobrado − Capital invertido − Gastos</div>
+      <div style="font-size:.72rem;opacity:.7;margin-top:4px;">Parte de ganancia de cada pago cobrado − Gastos</div>
     </div>
 
     <div class="sg" style="margin-bottom:14px;">
@@ -734,7 +734,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v48 OK');
+console.log('JR MOTOS v49 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1476,9 +1476,18 @@ const caja = {
     const costoMoto=DB.costoMoto||6250000;
     const capitalInvertido=numMotos*costoMoto;
 
-    const totalCobrado=DB.pagos.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
-    const abonosCapital=Math.min(totalCobrado,capitalInvertido);
-    const gananciaBruta=Math.max(0,totalCobrado-capitalInvertido);
+    // Modelo del PDF: cada pago ya trae una parte de capital y una de ganancia,
+    // en proporción fija (capital/semanas vs. cuota), desde el primer pago.
+    let abonosCapital=0, gananciaBruta=0;
+    DB.motos.forEach(m=>{
+      const semanas=m.semanas||78;
+      const capPorPago=costoMoto/semanas;
+      const ganPorPago=Math.max(0,(m.cuota||0)-capPorPago);
+      const pagados=DB.pagos.filter(p=>p.motoId===m.id).length;
+      abonosCapital+=Math.min(capPorPago*pagados,costoMoto);
+      gananciaBruta+=ganPorPago*pagados;
+    });
+
     const totalGastos=DB.gastos.reduce((s,g)=>s+(parseFloat(g.valor)||0),0);
     const gananciaNeta=Math.max(0,gananciaBruta-totalGastos);
     const gananciaAdmin=gananciaNeta*0.70;
