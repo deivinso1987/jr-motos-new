@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v49</title>
+<title>JR MOTOS v50</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -349,13 +349,15 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <button onclick="nav.ir('resumen','Resumen')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:600;cursor:pointer;margin-bottom:10px;font-family:'Inter',sans-serif;">← Volver a Resumen</button>
       <div style="font-size:.82rem;opacity:.85;margin-bottom:6px;">💰 GANANCIA (neta de gastos)</div>
       <div style="font-size:2rem;font-weight:800;" id="cj-ganancia">$0</div>
-      <div style="font-size:.72rem;opacity:.7;margin-top:4px;">Parte de ganancia de cada pago cobrado − Gastos</div>
+      <div style="font-size:.72rem;opacity:.7;margin-top:4px;">64.8% del total cobrado − Gastos</div>
     </div>
 
     <div class="sg" style="margin-bottom:14px;">
       <div class="sc"><div class="si az">🏍️</div><div><div class="sn az" id="cj-num-motos">0</div><div class="sl">Motos (capital)</div></div></div>
       <div class="sc"><div class="si az">🏦</div><div><div class="sn az" id="cj-capital">$0</div><div class="sl">Capital invertido</div></div></div>
-      <div class="sc"><div class="si ve">📥</div><div><div class="sn ve" id="cj-abonos-cap">$0</div><div class="sl">Abonos a capital</div></div></div>
+      <div class="sc"><div class="si ve">💵</div><div><div class="sn ve" id="cj-tot-cobrado">$0</div><div class="sl">Total cobrado</div></div></div>
+      <div class="sc"><div class="si az">📥</div><div><div class="sn az" id="cj-abonos-cap">$0</div><div class="sl">Abonos a capital (35.2%)</div></div></div>
+      <div class="sc"><div class="si ve">📈</div><div><div class="sn ve" id="cj-ganancia-bruta">$0</div><div class="sl">Ganancia bruta (64.8%)</div></div></div>
       <div class="sc"><div class="si ro">📤</div><div><div class="sn ro" id="cj-tot-gastos">$0</div><div class="sl">Gastos totales</div></div></div>
     </div>
 
@@ -734,7 +736,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v49 OK');
+console.log('JR MOTOS v50 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -1476,30 +1478,26 @@ const caja = {
     const costoMoto=DB.costoMoto||6250000;
     const capitalInvertido=numMotos*costoMoto;
 
-    // Modelo del PDF: cada pago ya trae una parte de capital y una de ganancia,
-    // en proporción fija (capital/semanas vs. cuota), desde el primer pago.
-    let abonosCapital=0, gananciaBruta=0;
-    DB.motos.forEach(m=>{
-      const semanas=m.semanas||78;
-      const capPorPago=costoMoto/semanas;
-      const ganPorPago=Math.max(0,(m.cuota||0)-capPorPago);
-      const pagados=DB.pagos.filter(p=>p.motoId===m.id).length;
-      abonosCapital+=Math.min(capPorPago*pagados,costoMoto);
-      gananciaBruta+=ganPorPago*pagados;
-    });
+    // Modelo fijo: de cada peso cobrado, 35.2% es abono a capital y 64.8% es ganancia.
+    const PCT_CAPITAL=0.352, PCT_GANANCIA=0.648;
+    const totalCobrado=DB.pagos.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
+    const abonosCapital=totalCobrado*PCT_CAPITAL;
+    const gananciaBruta=totalCobrado*PCT_GANANCIA;
 
     const totalGastos=DB.gastos.reduce((s,g)=>s+(parseFloat(g.valor)||0),0);
     const gananciaNeta=Math.max(0,gananciaBruta-totalGastos);
     const gananciaAdmin=gananciaNeta*0.70;
     const gananciaCobrador=gananciaNeta*0.30;
 
-    if($('cj-ganancia'))     $('cj-ganancia').textContent=fmt(gananciaNeta);
-    if($('cj-capital'))      $('cj-capital').textContent=fmt(capitalInvertido);
-    if($('cj-abonos-cap'))   $('cj-abonos-cap').textContent=fmt(abonosCapital);
-    if($('cj-num-motos'))    $('cj-num-motos').textContent=numMotos;
-    if($('cj-admin'))        $('cj-admin').textContent=fmt(gananciaAdmin);
-    if($('cj-cobrador'))     $('cj-cobrador').textContent=fmt(gananciaCobrador);
-    if($('cj-tot-gastos'))   $('cj-tot-gastos').textContent=totalGastos?'-'+fmt(totalGastos):'$0';
+    if($('cj-ganancia'))      $('cj-ganancia').textContent=fmt(gananciaNeta);
+    if($('cj-capital'))       $('cj-capital').textContent=fmt(capitalInvertido);
+    if($('cj-tot-cobrado'))   $('cj-tot-cobrado').textContent=fmt(totalCobrado);
+    if($('cj-abonos-cap'))    $('cj-abonos-cap').textContent=fmt(abonosCapital);
+    if($('cj-ganancia-bruta'))$('cj-ganancia-bruta').textContent=fmt(gananciaBruta);
+    if($('cj-num-motos'))     $('cj-num-motos').textContent=numMotos;
+    if($('cj-admin'))         $('cj-admin').textContent=fmt(gananciaAdmin);
+    if($('cj-cobrador'))      $('cj-cobrador').textContent=fmt(gananciaCobrador);
+    if($('cj-tot-gastos'))    $('cj-tot-gastos').textContent=totalGastos?'-'+fmt(totalGastos):'$0';
 
     const el=$('cj-lista-gastos');
     if(!el) return;
