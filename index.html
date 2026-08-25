@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v46</title>
+<title>JR MOTOS v47</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -338,6 +338,60 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
     <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
       <div class="sec-title">Pagos día a día</div>
       <div id="res-tabla"></div>
+    </div>
+    <button id="btn-ver-caja" onclick="nav.ir('caja','💵 Caja')" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.9rem;font-weight:700;cursor:pointer;">💵 Ver Caja (ganancias y gastos)</button>
+  </div>
+
+  <!-- CAJA (solo admin) -->
+  <div class="page" id="page-caja">
+    <div style="background:linear-gradient(135deg,#1565c0,#1976d2);border-radius:16px;padding:20px;margin-bottom:14px;margin-top:8px;color:#fff;text-align:center;">
+      <button onclick="nav.ir('resumen','Resumen')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:600;cursor:pointer;margin-bottom:10px;font-family:'Inter',sans-serif;">← Volver a Resumen</button>
+      <div style="font-size:.82rem;opacity:.85;margin-bottom:6px;">💰 GANANCIA (neta de gastos)</div>
+      <div style="font-size:2rem;font-weight:800;" id="cj-ganancia">$0</div>
+      <div style="font-size:.72rem;opacity:.7;margin-top:4px;">Total cobrado − Capital invertido − Gastos</div>
+    </div>
+
+    <div class="sg" style="margin-bottom:14px;">
+      <div class="sc"><div class="si az">🏍️</div><div><div class="sn az" id="cj-num-motos">0</div><div class="sl">Motos (capital)</div></div></div>
+      <div class="sc"><div class="si az">🏦</div><div><div class="sn az" id="cj-capital">$0</div><div class="sl">Capital invertido</div></div></div>
+      <div class="sc"><div class="si ve">📥</div><div><div class="sn ve" id="cj-abonos-cap">$0</div><div class="sl">Abonos a capital</div></div></div>
+      <div class="sc"><div class="si ro">📤</div><div><div class="sn ro" id="cj-tot-gastos">$0</div><div class="sl">Gastos totales</div></div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:#e8eaf6;border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:700;color:var(--az);" id="cj-admin">$0</div>
+        <div style="font-size:.7rem;color:var(--gt);">Administrador (70%)</div>
+      </div>
+      <div style="background:var(--veb);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:700;color:var(--ve);" id="cj-cobrador">$0</div>
+        <div style="font-size:.7rem;color:var(--gt);">Cobrador (30%)</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">
+      <div class="sec-title">🏍️ Costo por moto</div>
+      <div style="font-size:.8rem;color:var(--gt);margin-bottom:10px;">Se usa para calcular el capital invertido (motos distintas por placa × costo).</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="cj-costo-input" placeholder="Ej: 6.250.000" oninput="fmtInp(this)" inputmode="numeric"
+          style="flex:1;background:var(--bg);border:1.5px solid var(--bo);border-radius:9px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;">
+        <button onclick="caja.guardarCostoMoto()" style="background:var(--az);color:#fff;border:none;border-radius:9px;padding:11px 16px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;font-size:.85rem;">💾</button>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">
+      <div class="sec-title">📤 Registrar gasto</div>
+      <div class="r2">
+        <div class="fg"><label>Valor *</label><input type="text" id="cj-gasto-val" placeholder="0" oninput="fmtInp(this)" inputmode="numeric"></div>
+        <div class="fg"><label>Fecha</label><input type="date" id="cj-gasto-fec"></div>
+      </div>
+      <div class="fg"><label>Descripción *</label><input type="text" id="cj-gasto-obs" placeholder="Ej: SOAT, GPS, mantenimiento..."></div>
+      <button onclick="caja.guardarGasto()" class="btn btn-ro">📤 Registrar gasto</button>
+    </div>
+
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+      <div class="sec-title">Historial de gastos</div>
+      <div id="cj-lista-gastos"></div>
     </div>
   </div>
 
@@ -679,7 +733,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v46 OK');
+console.log('JR MOTOS v47 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -696,7 +750,7 @@ const TG_TOKEN = '8687200553:AAFF9Nm6B7UzMFKx_OVADODubV8CCUEoqTQ';
 const TG_CHAT  = '5474683392';
 
 // ── ESTADO ────────────────────────────────────────
-let DB  = { motos:[], pagos:[] };
+let DB  = { motos:[], pagos:[], gastos:[], costoMoto:6250000 };
 let ROL = '';
 let UID = '';
 let waMsgActual = '';
@@ -762,16 +816,20 @@ async function fsDel(col,id){
 async function cargar(){
   sbSet('🔄 Cargando...');
   try{
-    const [sm,sp]=await Promise.all([
+    const [sm,sp,sg,sc]=await Promise.all([
       FS.collection('motos').get(),
-      FS.collection('pagos').get()
+      FS.collection('pagos').get(),
+      FS.collection('gastos').get(),
+      FS.collection('config').doc('caja').get()
     ]);
     DB.motos  = sm.docs.map(d=>({id:d.id,...d.data()}));
     DB.pagos  = sp.docs.map(d=>({id:d.id,...d.data()}));
+    DB.gastos = sg.docs.map(d=>({id:d.id,...d.data()}));
+    DB.costoMoto = (sc.exists && sc.data().costoMoto) ? parseFloat(sc.data().costoMoto) : 6250000;
     sbSet('✅ Sincronizado','ok'); bk();
   }catch{
     sbSet('⚠️ Sin conexión — datos locales','err');
-    try{ const r=localStorage.getItem(KEY); if(r){const b=JSON.parse(r);DB.motos=b.motos||[];DB.pagos=b.pagos||[];} }catch{}
+    try{ const r=localStorage.getItem(KEY); if(r){const b=JSON.parse(r);DB.motos=b.motos||[];DB.pagos=b.pagos||[];DB.gastos=b.gastos||[];DB.costoMoto=b.costoMoto||6250000;} }catch{}
   }
 }
 
@@ -817,7 +875,7 @@ const auth = {
   },
   async logout(){
     await AUTH.signOut();
-    DB={motos:[],pagos:[]};ROL='';UID='';
+    DB={motos:[],pagos:[],gastos:[],costoMoto:6250000};ROL='';UID='';
     $('app').style.display='none';
     $('scr-login').style.display='flex';
   }
@@ -896,6 +954,7 @@ const nav={
     if(pg==='motos')   renders.motos();
     if(pg==='pagos')   renders.pagos();
     if(pg==='usuarios')renders.usuarios();
+    if(pg==='caja'){ if($('cj-gasto-fec'))$('cj-gasto-fec').value=hoy(); caja.cargar(); }
     if(pg==='resumen'){
       const bog=new Date(new Date().getTime()-5*60*60*1000);
       if($('res-mes'))  $('res-mes').value=bog.getMonth();
@@ -1402,7 +1461,88 @@ function closeImageVisor(){
   document.getElementById('img-visor-bg').style.display='none';
 }
 
+// ── CAJA (ganancias, capital y gastos) ────────────
+const caja = {
+  cargar(){
+    if($('cj-costo-input')) $('cj-costo-input').value=DB.costoMoto?DB.costoMoto.toLocaleString('es-CO'):'';
+    caja.renderizar();
+  },
 
+  renderizar(){
+    // Motos distintas por placa (una moto reasignada a otro cliente sigue siendo la misma inversión)
+    const placas=new Set(DB.motos.map(m=>m.placa).filter(Boolean));
+    const numMotos=placas.size;
+    const costoMoto=DB.costoMoto||6250000;
+    const capitalInvertido=numMotos*costoMoto;
+
+    const totalCobrado=DB.pagos.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
+    const abonosCapital=Math.min(totalCobrado,capitalInvertido);
+    const gananciaBruta=Math.max(0,totalCobrado-capitalInvertido);
+    const totalGastos=DB.gastos.reduce((s,g)=>s+(parseFloat(g.valor)||0),0);
+    const gananciaNeta=Math.max(0,gananciaBruta-totalGastos);
+    const gananciaAdmin=gananciaNeta*0.70;
+    const gananciaCobrador=gananciaNeta*0.30;
+
+    if($('cj-ganancia'))     $('cj-ganancia').textContent=fmt(gananciaNeta);
+    if($('cj-capital'))      $('cj-capital').textContent=fmt(capitalInvertido);
+    if($('cj-abonos-cap'))   $('cj-abonos-cap').textContent=fmt(abonosCapital);
+    if($('cj-num-motos'))    $('cj-num-motos').textContent=numMotos;
+    if($('cj-admin'))        $('cj-admin').textContent=fmt(gananciaAdmin);
+    if($('cj-cobrador'))     $('cj-cobrador').textContent=fmt(gananciaCobrador);
+    if($('cj-tot-gastos'))   $('cj-tot-gastos').textContent=totalGastos?'-'+fmt(totalGastos):'$0';
+
+    const el=$('cj-lista-gastos');
+    if(!el) return;
+    if(!DB.gastos.length){
+      el.innerHTML='<div style="text-align:center;color:var(--gt);padding:16px;font-size:.85rem;">Sin gastos registrados</div>';
+      return;
+    }
+    const sorted=[...DB.gastos].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    el.innerHTML=sorted.map(g=>`
+      <div class="det-row">
+        <div>
+          <div style="font-size:.85rem;font-weight:600;">${fmt(g.valor)}</div>
+          <div style="font-size:.72rem;color:var(--gt);">${fmtF(g.fecha)}${g.obs?' · '+g.obs:''}</div>
+        </div>
+        <button onclick="caja.eliminarGasto('${g.id}')"
+          style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;">✕</button>
+      </div>`).join('');
+  },
+
+  async guardarCostoMoto(){
+    if(ROL!=='admin'){toast('⛔ Sin permisos');return;}
+    const val=leerVal('cj-costo-input');
+    if(!val||val<=0){toast('⚠️ Ingresa el costo por moto');return;}
+    DB.costoMoto=val;
+    await fsSet('config','caja',{costoMoto:val});
+    caja.renderizar();
+    toast('✅ Costo por moto guardado');
+  },
+
+  async guardarGasto(){
+    if(ROL!=='admin'){toast('⛔ Sin permisos');return;}
+    const val=leerVal('cj-gasto-val');
+    const fec=$('cj-gasto-fec').value||hoy();
+    const obs=$('cj-gasto-obs').value.trim();
+    if(!val||val<=0){toast('⚠️ Ingresa el valor del gasto');return;}
+    if(!obs){toast('⚠️ Ingresa una descripción (SOAT, GPS, etc.)');return;}
+    const g={id:uid(),valor:val,fecha:fec,obs};
+    DB.gastos.push(g);
+    $('cj-gasto-val').value=''; $('cj-gasto-obs').value=''; $('cj-gasto-fec').value=hoy();
+    caja.renderizar();
+    const ok=await fsSet('gastos',g.id,g);
+    toast(ok?'✅ Gasto registrado':'✅ Guardado localmente');
+  },
+
+  async eliminarGasto(id){
+    if(ROL!=='admin'){toast('⛔ Sin permisos');return;}
+    if(!confirm('¿Eliminar este gasto?'))return;
+    DB.gastos=DB.gastos.filter(g=>g.id!==id);
+    caja.renderizar();
+    await fsDel('gastos',id).catch(()=>bk());
+    toast('🗑 Gasto eliminado');
+  }
+};
 
 const modales={
   abrirMoto(id=''){
