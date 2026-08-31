@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v51</title>
+<title>JR MOTOS v52</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -736,7 +736,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 <script>
 
 // ── FIREBASE ──────────────────────────────────────
-console.log('JR MOTOS v51 OK');
+console.log('JR MOTOS v52 OK');
 firebase.initializeApp({
   apiKey:"AIzaSyB4egLVf5DHLvKYb9Hw3dGlCN-xe_-TH54",
   authDomain:"jr-motos-c22d7.firebaseapp.com",
@@ -999,12 +999,11 @@ const renders={
     $('s-hoy').textContent=fmt(totHoy);
     if($('s-car'))$('s-car').textContent=fmt(cartera);
     if($('s-cob'))$('s-cob').textContent=fmt(totCob);
-    // Cobros de la semana — motos sin pago en los últimos 6 días
-    // (semana sábado a sábado: si pagó el sábado pasado, ya lleva 7+ días)
+    // Cobros de la semana — motos sin pago desde el último sábado
+    // (misma semana sábado-martes que usan "Pagos de la semana" e Inicio)
     // Los viernes se muestran TODAS las motos activas (pagadas y pendientes),
     // como recordatorio completo antes de cerrar la semana.
-    const hace6=new Date(new Date(h+'T12:00:00').getTime()-6*24*60*60*1000).toISOString().slice(0,10);
-    const pagadosSemana=new Set(DB.pagos.filter(p=>p.fecha>=hace6&&p.fecha<=h).map(p=>p.motoId));
+    const pagadosSemana=new Set(DB.pagos.filter(p=>p.fecha>=inicioSem&&p.fecha<=h).map(p=>p.motoId));
     const esViernes=new Date(h+'T12:00:00').getDay()===5;
     const pendientes=act.filter(m=>!pagadosSemana.has(m.id));
     const listaCobros=(esViernes?act:pendientes).slice().sort((a,b)=>semanasEnMora(b)-semanasEnMora(a));
