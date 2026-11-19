@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v55</title>
+<title>JR MOTOS v56</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -783,16 +783,28 @@ function leerVal(id){ return parseFloat(($(id).value||'').replace(/\./g,'').repl
 const DIAS_SEMANA = {lunes:1,martes:2,miercoles:3,jueves:4,viernes:5,sabado:6,domingo:0};
 const DIAS_NOMBRE = {lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes',sabado:'Sábado',domingo:'Domingo'};
 
-// Obtener todas las fechas de pago de una moto (cada 7 días desde inicio)
+// Días de gracia: un cliente entra en mora cuando pasan 3 días después de la fecha de pago
+const DIAS_GRACIA = 3;
+const addDias = (f,n) => new Date(new Date(f+'T12:00:00').getTime()+n*24*60*60*1000).toISOString().slice(0,10);
+
+// Fechas de pago de una moto: el día de cobro (sábado; martes para quien lo pactó) de cada semana.
+// La primera fecha es el primer día de cobro desde la entrega (primer pago, que puede ser parcial).
 function fechasPago(moto){
   const fechas = [];
   const ini = new Date(moto.fechaInicio+'T12:00:00');
+  const dia = DIAS_SEMANA[moto.diaPago||'sabado'];
+  const delta = ((dia - ini.getDay() + 7) % 7) || 7; // si la entrega fue el mismo día de cobro, el primer pago es a los 7 días
+  const prim = ini.getTime() + delta*24*60*60*1000;
   const numSemanas = moto.semanas || 78;
-  for(let i=1; i<=numSemanas; i++){
-    const f = new Date(ini.getTime() + i*7*24*60*60*1000);
-    fechas.push(f.toISOString().slice(0,10));
+  for(let i=0; i<numSemanas; i++){
+    fechas.push(new Date(prim + i*7*24*60*60*1000).toISOString().slice(0,10));
   }
   return fechas;
+}
+// Fechas de pago ya vencidas (pasaron los días de gracia)
+function fechasVencidas(moto){
+  const h = hoy();
+  return fechasPago(moto).filter(f=>addDias(f,DIAS_GRACIA)<h);
 }
 
 // Calcular semanas en mora
@@ -801,7 +813,7 @@ function semanasEnMora(moto){
   const h = hoy();
   const fechas = fechasPago(moto);
   const pagosHechos = DB.pagos.filter(p=>p.motoId===moto.id).length;
-  const semanasPasadas = fechas.filter(f=>f<=h).length;
+  const semanasPasadas = fechasVencidas(moto).length;
   return Math.max(0, semanasPasadas - pagosHechos);
 }
 
@@ -815,12 +827,13 @@ function estadoCuenta(m){
   // El primer pago puede ser menor a la cuota (depende del día de entrega): se toma como cuota completa
   if(ps.length){ const p0=parseFloat(ps[0].monto)||0; if(p0>0&&p0<cuota) pagado+=cuota-p0; }
   const fechas=fechasPago(m);
-  const vencidas=fechas.filter(f=>f<=h);
+  const vencidas=fechasVencidas(m);
   const esperado=cuota*vencidas.length;
+  const llegadas=fechas.filter(f=>f<=h).length;
   const cubiertas=cuota>0?Math.min(fechas.length,Math.floor(pagado/cuota+1e-9)):0;
   const pendFechas=vencidas.slice(cubiertas);
   const resto=cuota>0?Math.max(0,pagado-cubiertas*cuota):0;
-  return {cuota,pagado,esperado,deuda:Math.max(0,esperado-pagado),adelanto:Math.max(0,pagado-esperado),pendFechas,resto,cubiertas};
+  return {cuota,pagado,esperado,deuda:Math.max(0,esperado-pagado),adelanto:Math.max(0,pagado-cuota*llegadas),pendFechas,resto,cubiertas};
 }
 function fechasPendTxt(arr,max=6){
   const v=arr.slice(0,max).map(fmtFcorta).join(' · ');
