@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v57</title>
+<title>JR MOTOS v58</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1261,6 +1261,10 @@ function calcPrevMoto(){
 }
 
 // ── RECIBO ──
+// Título del recibo: RECIBO - MOTO N - NOMBRE DEL CLIENTE
+function numMotoRecibo(r){ const m=(r.modelo||'').match(/moto\s*(\d+)/i); return m?('MOTO '+m[1]):''; }
+function tituloRecibo(r){ const n=numMotoRecibo(r); return 'RECIBO'+(n?' - '+n:'')+' - '+String(r.nombre||'').toUpperCase(); }
+function archivoRecibo(r){ const n=numMotoRecibo(r).replace(' ',''); const nom=String(r.nombre||'').split(' ')[0].replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g,''); return 'Recibo'+(n?'-'+n:'')+(nom?'-'+nom:'')+'.png'; }
 function fmtFecha(str){
   if(!str) return '—';
   const [y,m,d]=str.split('-');
@@ -1382,10 +1386,10 @@ async function intentarCompartir(){
     // Convertir dataURL a blob
     const resp = await fetch(ultimaImagenURL);
     const blob = await resp.blob();
-    const file = new File([blob], 'JR-MOTOS-Recibo.png', { type: 'image/png' });
+    const file = new File([blob], currentRecibo?archivoRecibo(currentRecibo):'JR-MOTOS-Recibo.png', { type: 'image/png' });
     // Intentar API nativa (funciona en Safari fuera de PWA y en algunos contextos PWA)
     if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
-      await navigator.share({ title: 'JR MOTOS – Recibo', files: [file] });
+      await navigator.share({ title: currentRecibo?tituloRecibo(currentRecibo):'JR MOTOS – Recibo', files: [file] });
       toast('✅ ¡Imagen compartida!');
     } else {
       // En PWA de iPhone: no se puede compartir archivo programáticamente
@@ -1406,16 +1410,15 @@ function abrirWaConTexto(){
   const semText = r.semana ? `Semana N° ${r.semana}` : 'N/A';
   const tel = r.tel ? `57${r.tel}` : '';
   const waText =
-    `🏍️ *JR MOTOS – Comprobante de Pago*\n` +
+    `🏍️ *${tituloRecibo(r)}*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `📋 *Recibo N°:* ${r.num}\n` +
     `📅 *Fecha:* ${fmtF(r.fecha)}\n` +
     `🗓️ *${semText}*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
-    `👤 *Cliente:* ${r.nombre}\n` +
     (r.cedula ? `🪪 *Cédula:* ${r.cedula}\n` : '') +
     `🏍️ *Placa:* ${r.placa}\n` +
-    (r.modelo ? `🔧 *Modelo:* ${r.modelo}\n` : '') +
+    (r.modelo && !numMotoRecibo(r) ? `🔧 *Modelo:* ${r.modelo}\n` : '') +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `💰 *Valor pagado:* $${r.monto}\n` +
     `💳 *Método:* ${r.metodo}\n` +
@@ -1450,10 +1453,10 @@ async function intentarCompartir(){
     // Convertir dataURL a blob
     const resp = await fetch(ultimaImagenURL);
     const blob = await resp.blob();
-    const file = new File([blob], 'JR-MOTOS-Recibo.png', { type: 'image/png' });
+    const file = new File([blob], currentRecibo?archivoRecibo(currentRecibo):'JR-MOTOS-Recibo.png', { type: 'image/png' });
     // Intentar API nativa (funciona en Safari fuera de PWA y en algunos contextos PWA)
     if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
-      await navigator.share({ title: 'JR MOTOS – Recibo', files: [file] });
+      await navigator.share({ title: currentRecibo?tituloRecibo(currentRecibo):'JR MOTOS – Recibo', files: [file] });
       toast('✅ ¡Imagen compartida!');
     } else {
       // En PWA de iPhone: no se puede compartir archivo programáticamente
@@ -1473,16 +1476,15 @@ function abrirWaConTexto(){
   const semText = r.semana ? `Semana N° ${r.semana}` : 'N/A';
   const tel = r.tel ? `57${r.tel}` : '';
   const waText =
-    `🏍️ *JR MOTOS – Comprobante de Pago*\n` +
+    `🏍️ *${tituloRecibo(r)}*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `📋 *Recibo N°:* ${r.num}\n` +
     `📅 *Fecha:* ${fmtF(r.fecha)}\n` +
     `🗓️ *${semText}*\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
-    `👤 *Cliente:* ${r.nombre}\n` +
     (r.cedula ? `🪪 *Cédula:* ${r.cedula}\n` : '') +
     `🏍️ *Placa:* ${r.placa}\n` +
-    (r.modelo ? `🔧 *Modelo:* ${r.modelo}\n` : '') +
+    (r.modelo && !numMotoRecibo(r) ? `🔧 *Modelo:* ${r.modelo}\n` : '') +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `💰 *Valor pagado:* $${r.monto}\n` +
     `💳 *Método:* ${r.metodo}\n` +
