@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v54</title>
+<title>JR MOTOS v55</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -797,6 +797,7 @@ function fechasPago(moto){
 
 // Calcular semanas en mora
 function semanasEnMora(moto){
+  if(moto.estado==='traspasado') return 0;
   const h = hoy();
   const fechas = fechasPago(moto);
   const pagosHechos = DB.pagos.filter(p=>p.motoId===moto.id).length;
@@ -807,6 +808,7 @@ function semanasEnMora(moto){
 // Estado de cuenta en dinero: cuotas vencidas vs. lo realmente pagado
 const fmtP = n => '$'+Math.round(n||0).toLocaleString('es-CO');
 function estadoCuenta(m){
+  if(m.estado==='traspasado') return {cuota:parseFloat(m.cuota)||0,pagado:0,esperado:0,deuda:0,adelanto:0,pendFechas:[],resto:0,cubiertas:0};
   const h=hoy(), cuota=parseFloat(m.cuota)||0;
   const ps=DB.pagos.filter(p=>p.motoId===m.id).sort((x,y)=>(x.fecha||'').localeCompare(y.fecha||''));
   let pagado=ps.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
@@ -1065,7 +1067,7 @@ const renders={
 
   motos(f=''){
     const el=$('lista-motos');
-    let lista=DB.motos.filter(m=>m.estado==='activo'||m.estado==='suspendido');
+    let lista=DB.motos.filter(m=>m.estado==='activo'||m.estado==='suspendido'||m.estado==='traspasado');
     if(f)lista=lista.filter(m=>(m.nombre||'').toLowerCase().includes(f.toLowerCase())||(m.placa||'').toLowerCase().includes(f.toLowerCase()));
     if(!lista.length){el.innerHTML='<div class="empty"><div style="font-size:2.5rem;">🏍️</div><div>Sin motos activas</div></div>';return;}
     lista.sort((a,b)=>semanasEnMora(b)-semanasEnMora(a));
@@ -1075,11 +1077,12 @@ const renders={
       const pagados=DB.pagos.filter(p=>p.motoId===m.id).length;
       const totalPagado=DB.pagos.filter(p=>p.motoId===m.id).reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
       const pct=Math.min(100,Math.round((pagados/(m.semanas||78))*100));
-      const fill=m.estado==='suspendido'?'#9e9e9e':(mo>=6?'var(--roc)':(mo>=3?'var(--moc)':(mo>=1?'var(--amc)':'var(--vec)')));
-      const badgeCls=m.estado==='suspendido'?'am':(mo>=6?'ro':(mo>=3?'mo':(mo>=1?'am':'ve')));
-      const badgeTxt=m.estado==='suspendido'?'⏸️ Suspendido':(mo===0?'✅ Al día':(mo>=6?'🔴 Mora '+mo+'sem':(mo>=3?'🟣 Mora '+mo+'sem':'🟡 Mora '+mo+'sem')));
+      const tras=m.estado==='traspasado';
+      const fill=(m.estado==='suspendido'||tras)?'#9e9e9e':(mo>=6?'var(--roc)':(mo>=3?'var(--moc)':(mo>=1?'var(--amc)':'var(--vec)')));
+      const badgeCls=(m.estado==='suspendido'||tras)?'am':(mo>=6?'ro':(mo>=3?'mo':(mo>=1?'am':'ve')));
+      const badgeTxt=tras?'🔁 Traspasada':m.estado==='suspendido'?'⏸️ Suspendido':(mo===0?'✅ Al día':(mo>=6?'🔴 Mora '+mo+'sem':(mo>=3?'🟣 Mora '+mo+'sem':'🟡 Mora '+mo+'sem')));
       return '<div class="moto-item" onclick="modales.verMoto(\''+m.id+'\')"><div class="moto-top">'
-        +'<div class="sem '+sc+'"></div>'
+        +'<div class="sem '+sc+'"'+(tras?' style="background:#9e9e9e"':'')+'></div>'
         +'<div class="moto-info"><div class="moto-nom">'+(m.nombre||'Sin nombre')+'</div>'
         +'<div class="moto-sub">'+m.placa+' · '+m.modelo+' · '+DIAS_NOMBRE[m.diaPago||'sabado']+'</div></div>'
         +'<div class="moto-right"><div class="moto-monto" style="color:'+(mo>0?fill:'var(--ne)')+'">'+fmt(m.cuota)+'/sem</div>'
@@ -1668,7 +1671,9 @@ const modales={
     const saldo=Math.max(0,totalCred-totPag);
     const mo=semanasEnMora(m);
     const pct=Math.min(100,Math.round((pags.length/(m.semanas||78))*100));
-    const moraHtml=mo>0
+    const moraHtml=m.estado==='traspasado'
+      ?'<div style="background:#f1f1f1;border:1px solid #d5d5d5;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-weight:700;font-size:.85rem;color:#555;">🔁 MOTO TRASPASADA — solo historial de pagos'+(m.notas?'<div style="font-weight:400;margin-top:4px;">'+m.notas+'</div>':'')+'</div>'
+      :mo>0
       ?'<div style="background:var(--rob);border:1px solid #ffcdd2;border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.85rem;color:var(--ro);">🚨 EN MORA — '+mo+' semana'+(mo>1?'s':'')+' sin pagar</div></div>'
       :'<div style="background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:.85rem;color:var(--ve);">✅ AL DÍA</div>';
     const ec=estadoCuenta(m);
@@ -1698,6 +1703,7 @@ const modales={
           :pags.map(p=>'<div class="pago-row" onclick="modales.verRecibo(\''+p.id+'\',false)" style="cursor:pointer;"><div><div style="font-size:.85rem;font-weight:600;">'+fmt(p.monto)+'</div><div style="font-size:.72rem;color:var(--gt);">'+fmtF(p.fecha)+' · '+p.metodo+(p.obs?' · '+p.obs:'')+'</div></div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:.7rem;color:var(--az);">🧾</span><button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="event.stopPropagation();acc.eliminarPago(\''+p.id+'\',\''+id+'\')">✕</button></div></div>').join(''))
         :'');
     $('d-pagar').onclick=()=>{ cerrarMb('m-det'); modales.abrirPago(id); };
+    $('d-pagar').style.display=m.estado==='traspasado'?'none':'';
     if(esAdmin){
       if(m.estado==='suspendido'){
         $('d-can').textContent='🔓 Reactivar crédito';$('d-can').className='btn btn-ve';
