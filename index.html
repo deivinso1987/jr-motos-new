@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v56</title>
+<title>JR MOTOS v57</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -810,11 +810,9 @@ function fechasVencidas(moto){
 // Calcular semanas en mora
 function semanasEnMora(moto){
   if(moto.estado==='traspasado') return 0;
-  const h = hoy();
-  const fechas = fechasPago(moto);
-  const pagosHechos = DB.pagos.filter(p=>p.motoId===moto.id).length;
-  const semanasPasadas = fechasVencidas(moto).length;
-  return Math.max(0, semanasPasadas - pagosHechos);
+  // Semanas completas sin cubrir (con 3 días de gracia), según lo realmente pagado
+  const e = estadoCuenta(moto);
+  return e.cuota>0 ? Math.floor(e.deuda/e.cuota + 1e-9) : 0;
 }
 
 // Estado de cuenta en dinero: cuotas vencidas vs. lo realmente pagado
@@ -823,9 +821,10 @@ function estadoCuenta(m){
   if(m.estado==='traspasado') return {cuota:parseFloat(m.cuota)||0,pagado:0,esperado:0,deuda:0,adelanto:0,pendFechas:[],resto:0,cubiertas:0};
   const h=hoy(), cuota=parseFloat(m.cuota)||0;
   const ps=DB.pagos.filter(p=>p.motoId===m.id).sort((x,y)=>(x.fecha||'').localeCompare(y.fecha||''));
-  let pagado=ps.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
-  // El primer pago puede ser menor a la cuota (depende del día de entrega): se toma como cuota completa
-  if(ps.length){ const p0=parseFloat(ps[0].monto)||0; if(p0>0&&p0<cuota) pagado+=cuota-p0; }
+  // El primer pago puede ser menor a la cuota (depende del día de entrega): cuenta como cuota completa.
+  // Una diferencia de hasta $5.000 en un pago (ej. $220.000 de $222.000) también se toma como pago completo.
+  let pagado=0;
+  ps.forEach((p,i)=>{ let v=parseFloat(p.monto)||0; if(v>0&&v<cuota&&(i===0||cuota-v<=5000)) v=cuota; pagado+=v; });
   const fechas=fechasPago(m);
   const vencidas=fechasVencidas(m);
   const esperado=cuota*vencidas.length;
