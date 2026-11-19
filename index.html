@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v52</title>
+<title>JR MOTOS v54</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -270,11 +270,13 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <button class="ab ve" onclick="modales.abrirPago()">💳 Registrar Pago</button>
       <button class="ab" onclick="nav.ir('pagos','Pagos de la semana')">📄 Pagos de la semana</button>
       <button class="ab" onclick="nav.ir('motos','Motos')">📋 Ver Motos</button>
+      <button class="ab" style="grid-column:1/-1;" onclick="modales.verPendientes()">⏳ Semanas pendientes por cliente</button>
     </div>
     <div id="ag-cobrador" class="ag" style="display:none;">
       <button class="ab ve" style="grid-column:1/-1;" onclick="modales.abrirPago()">💳 Registrar Pago</button>
       <button class="ab" onclick="nav.ir('pagos','Pagos de la semana')">📄 Pagos de la semana</button>
       <button class="ab" onclick="nav.ir('motos','Motos')">📋 Ver Motos</button>
+      <button class="ab" style="grid-column:1/-1;" onclick="modales.verPendientes()">⏳ Semanas pendientes por cliente</button>
     </div>
     <!-- Por cobrar hoy -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -503,6 +505,13 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
 </div></div>
 
 <!-- MODAL DETALLE MOTO -->
+<div class="mb" id="m-pend"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2">⏳ Semanas pendientes por cliente</div>
+  <div id="pend-bod" style="max-height:62vh;overflow-y:auto;"></div>
+  <button class="btn btn-out" style="margin-top:12px;" onclick="cerrarMb('m-pend')">Cerrar</button>
+</div></div>
+
 <div class="mb" id="m-det"><div class="mo">
   <div class="mh"></div>
   <div class="mt2" id="d-tit">Detalle</div>
@@ -795,6 +804,27 @@ function semanasEnMora(moto){
   return Math.max(0, semanasPasadas - pagosHechos);
 }
 
+// Estado de cuenta en dinero: cuotas vencidas vs. lo realmente pagado
+const fmtP = n => '$'+Math.round(n||0).toLocaleString('es-CO');
+function estadoCuenta(m){
+  const h=hoy(), cuota=parseFloat(m.cuota)||0;
+  const ps=DB.pagos.filter(p=>p.motoId===m.id).sort((x,y)=>(x.fecha||'').localeCompare(y.fecha||''));
+  let pagado=ps.reduce((s,p)=>s+(parseFloat(p.monto)||0),0);
+  // El primer pago puede ser menor a la cuota (depende del día de entrega): se toma como cuota completa
+  if(ps.length){ const p0=parseFloat(ps[0].monto)||0; if(p0>0&&p0<cuota) pagado+=cuota-p0; }
+  const fechas=fechasPago(m);
+  const vencidas=fechas.filter(f=>f<=h);
+  const esperado=cuota*vencidas.length;
+  const cubiertas=cuota>0?Math.min(fechas.length,Math.floor(pagado/cuota+1e-9)):0;
+  const pendFechas=vencidas.slice(cubiertas);
+  const resto=cuota>0?Math.max(0,pagado-cubiertas*cuota):0;
+  return {cuota,pagado,esperado,deuda:Math.max(0,esperado-pagado),adelanto:Math.max(0,pagado-esperado),pendFechas,resto,cubiertas};
+}
+function fechasPendTxt(arr,max=6){
+  const v=arr.slice(0,max).map(fmtFcorta).join(' · ');
+  return v+(arr.length>max?' … y '+(arr.length-max)+' más':'');
+}
+
 // Estado semáforo: 0 = verde, 1-2 = amarillo, 3-5 = morado, 6+ = rojo
 function semColor(mora){
   if(mora===0) return 've';
@@ -826,7 +856,7 @@ async function cargar(){
       FS.collection('config').doc('caja').get()
     ]);
     DB.motos  = sm.docs.map(d=>({id:d.id,...d.data()}));
-    DB.pagos  = sp.docs.map(d=>({id:d.id,...d.data()}));
+    DB.pagos  = sp.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.estado!=='ELIMINADO');
     DB.gastos = sg.docs.map(d=>({id:d.id,...d.data()}));
     DB.costoMoto = (sc.exists && sc.data().costoMoto) ? parseFloat(sc.data().costoMoto) : 6250000;
     sbSet('✅ Sincronizado','ok'); bk();
@@ -1597,6 +1627,18 @@ const modales={
     abrirMb('m-pago');
   },
 
+  verPendientes(){
+    const lista=DB.motos.filter(m=>m.estado==='activo').map(m=>({m,ec:estadoCuenta(m)})).filter(x=>x.ec.deuda>0).sort((a,b)=>b.ec.deuda-a.ec.deuda);
+    const tot=lista.reduce((s,x)=>s+x.ec.deuda,0);
+    $('pend-bod').innerHTML=!lista.length
+      ?'<div style="text-align:center;color:var(--ve);padding:24px;font-weight:700;">✅ Todos los clientes están al día</div>'
+      :'<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:.82rem;font-weight:700;color:#b45f06;">'+lista.length+' cliente'+(lista.length===1?'':'s')+' con deuda · '+fmtP(tot)+' por cobrar</div>'
+        +lista.map(x=>'<div class="pago-row" style="cursor:pointer;display:block;" onclick="cerrarMb(\'m-pend\');modales.verMoto(\''+x.m.id+'\')">'
+          +'<div style="display:flex;justify-content:space-between;gap:8px;"><div style="font-size:.85rem;font-weight:700;">'+(x.m.nombre||'Sin nombre')+'</div><div style="font-size:.85rem;font-weight:700;color:var(--ro);">'+fmtP(x.ec.deuda)+'</div></div>'
+          +'<div style="font-size:.72rem;color:var(--gt);">'+x.m.placa+' · '+x.ec.pendFechas.length+' cuota'+(x.ec.pendFechas.length===1?'':'s')+': '+fechasPendTxt(x.ec.pendFechas,5)+(x.ec.resto>0?' · abonó '+fmtP(x.ec.resto)+' a la primera':'')+'</div></div>').join('');
+    abrirMb('m-pend');
+  },
+
   seleccionarMoto(motoId){
     const m=DB.motos.find(x=>x.id===motoId);if(!m)return;
     $('pago-moto-id').value=motoId;
@@ -1612,6 +1654,9 @@ const modales={
       info.style.cssText='display:block;background:var(--veb);border:1px solid #c8e6c9;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:.8rem;line-height:1.8;color:var(--ve);';
       info.innerHTML='✅ Al día · Cuota: <b>'+fmt(m.cuota)+'</b>/semana · Día: '+DIAS_NOMBRE[m.diaPago||'sabado'];
     }
+    const ec=estadoCuenta(m);
+    if(ec.deuda>0) info.innerHTML+='<br>💰 <b>Debe '+fmtP(ec.deuda)+'</b> ('+ec.pendFechas.length+' cuota'+(ec.pendFechas.length===1?'':'s')+'): '+fechasPendTxt(ec.pendFechas,4);
+    else if(ec.adelanto>=ec.cuota&&ec.cuota>0) info.innerHTML+='<br>⏩ Adelantado '+fmtP(ec.adelanto);
     $('pago-p1').style.display='none';$('pago-p2').style.display='block';
   },
 
@@ -1626,11 +1671,16 @@ const modales={
     const moraHtml=mo>0
       ?'<div style="background:var(--rob);border:1px solid #ffcdd2;border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.85rem;color:var(--ro);">🚨 EN MORA — '+mo+' semana'+(mo>1?'s':'')+' sin pagar</div></div>'
       :'<div style="background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:.85rem;color:var(--ve);">✅ AL DÍA</div>';
+    const ec=estadoCuenta(m);
+    const cuentaHtml=ec.deuda>0
+      ?'<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.82rem;"><div style="font-weight:700;color:#b45f06;">💰 Debe '+fmtP(ec.deuda)+' · '+ec.pendFechas.length+' cuota'+(ec.pendFechas.length===1?'':'s')+' sin cubrir</div><div style="margin-top:4px;color:#555;">Vencimientos: '+fechasPendTxt(ec.pendFechas)+(ec.resto>0?'<br>Abono parcial acumulado: '+fmtP(ec.resto)+' (faltan '+fmtP(ec.cuota-ec.resto)+' para completar la cuota)':'')+'</div></div>'
+      :(ec.adelanto>=ec.cuota&&ec.cuota>0
+        ?'<div style="background:#e3f2fd;border:1px solid #bbdefb;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;font-weight:700;color:#1565c0;">⏩ Adelantado '+fmtP(ec.adelanto)+' ('+Math.floor(ec.adelanto/ec.cuota)+' cuota'+(Math.floor(ec.adelanto/ec.cuota)===1?'':'s')+' por delante)</div>':'');
     $('d-tit').textContent=m.modelo+' · '+(m.nombre||'Sin nombre').toUpperCase()+(mo>0?' 🚨':'');
     const esAdmin=ROL==='admin';
     $('d-btns-admin').style.display=esAdmin?'grid':'none';
     $('d-btns-cobrador').style.display=esAdmin?'none':'grid';
-    $('d-bod').innerHTML=moraHtml
+    $('d-bod').innerHTML=moraHtml+cuentaHtml
       +'<div class="det-row"><span class="det-l">Placa</span><span class="det-v">'+m.placa+'</span></div>'
       +'<div class="det-row"><span class="det-l">Modelo</span><span class="det-v">'+m.modelo+'</span></div>'
       +'<div class="det-row"><span class="det-l">Cédula</span><span class="det-v">'+m.cedula+'</span></div>'
@@ -1802,6 +1852,15 @@ const acc={
     const moto=DB.motos.find(m=>m.id===motoId);if(!moto)return;
     let nomCobrador='';
     try{const snap=await FS.collection('usuarios').doc(UID).get();if(snap.exists)nomCobrador=snap.data().nombre||snap.data().email||'';}catch{}
+    const fecN=$('pago-fec').value;
+    const semDe=f=>{const d=new Date(f+'T12:00:00');d.setDate(d.getDate()-((d.getDay()+1)%7));return d.toISOString().slice(0,10);};
+    const ecN=estadoCuenta(moto);
+    const mismaSem=DB.pagos.filter(p=>p.motoId===motoId&&semDe(p.fecha)===semDe(fecN));
+    const igual=mismaSem.some(p=>p.fecha===fecN&&Math.round(p.monto)===Math.round(val));
+    if(mismaSem.length&&(ecN.deuda<=0||igual)){
+      const det=mismaSem.map(p=>'• '+fmtF(p.fecha)+' · '+fmtP(p.monto)).join('\n');
+      if(!confirm('⚠️ POSIBLE PAGO DUPLICADO\n'+(moto.nombre||'')+' ya tiene pago en esta semana (sáb–vie):\n'+det+'\n\n'+(igual?'Hay un pago con la misma fecha y el mismo valor.':'No registra deuda pendiente.')+'\n¿Registrar de todos modos '+fmtP(val)+'?'))return;
+    }
     const pagosAnt=DB.pagos.filter(p=>p.motoId===motoId).length;
     const p={
       id:uid(), motoId, clienteNombre:moto.nombre,
