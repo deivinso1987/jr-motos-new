@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR MOTOS">
-<title>JR MOTOS v58</title>
+<title>JR MOTOS v59</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -366,11 +366,11 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div style="background:#e8eaf6;border-radius:10px;padding:12px;text-align:center;">
         <div style="font-size:1.1rem;font-weight:700;color:var(--az);" id="cj-admin">$0</div>
-        <div style="font-size:.7rem;color:var(--gt);">Administrador (70%)</div>
+        <div style="font-size:.7rem;color:var(--gt);">Administrador (75%)</div>
       </div>
       <div style="background:var(--veb);border-radius:10px;padding:12px;text-align:center;">
         <div style="font-size:1.1rem;font-weight:700;color:var(--ve);" id="cj-cobrador">$0</div>
-        <div style="font-size:.7rem;color:var(--gt);">Cobrador (30%)</div>
+        <div style="font-size:.7rem;color:var(--gt);">Cobrador (25%)</div>
       </div>
     </div>
 
@@ -1261,6 +1261,12 @@ function calcPrevMoto(){
 }
 
 // ── RECIBO ──
+// Mensaje de saldo pendiente para pagos menores a la cuota (no aplica al primer pago, que puede ser parcial)
+function msgSaldoPago(p,m,previos){
+  const cuota=parseFloat(m&&m.cuota)||0, v=parseFloat(p.monto)||0;
+  if(!cuota||v<=0||v>=cuota||!previos) return '';
+  return 'Pagó '+fmtP(v)+' · Saldo pendiente '+fmtP(cuota-v)+' de esta semana';
+}
 // Título del recibo: RECIBO - MOTO N - NOMBRE DEL CLIENTE
 function numMotoRecibo(r){ const m=(r.modelo||'').match(/moto\s*(\d+)/i); return m?('MOTO '+m[1]):''; }
 function tituloRecibo(r){ const n=numMotoRecibo(r); return 'RECIBO'+(n?' - '+n:'')+' - '+String(r.nombre||'').toUpperCase(); }
@@ -1539,8 +1545,8 @@ const caja = {
 
     const totalGastos=DB.gastos.reduce((s,g)=>s+(parseFloat(g.valor)||0),0);
     const gananciaNeta=Math.max(0,gananciaBruta-totalGastos);
-    const gananciaAdmin=gananciaNeta*0.70;
-    const gananciaCobrador=gananciaNeta*0.30;
+    const gananciaAdmin=gananciaNeta*0.75;
+    const gananciaCobrador=gananciaNeta*0.25;
 
     if($('cj-ganancia'))      $('cj-ganancia').textContent=fmt(gananciaNeta);
     if($('cj-capital'))       $('cj-capital').textContent=fmt(capitalInvertido);
@@ -1755,7 +1761,7 @@ const modales={
       id:p.id, motoId:p.motoId, num:numRecibo, fecha:p.fecha, semana:pagados,
       nombre:(p.clienteNombre||'').toUpperCase(),
       cedula:m?m.cedula:'', placa:m?m.placa:'', modelo:m?m.modelo:'',
-      monto:montoStr, metodo:p.metodo||'Nequi', tel:m?m.tel:'', obs:p.obs||'',
+      monto:montoStr, metodo:p.metodo||'Nequi', tel:m?m.tel:'', obs:(()=>{const o=p.obs||'';const prev=DB.pagos.filter(x=>x.motoId===p.motoId&&x.id!==p.id&&((x.fecha||'')<(p.fecha||'')||((x.fecha||'')===(p.fecha||'')&&(x._ts?.seconds||0)<(p._ts?.seconds||0)))).length;const ms=msgSaldoPago(p,m,prev);return (ms&&!/saldo/i.test(o))?(o?o+' · ':'')+ms:o;})(),
       msgProx:'Hemos recibido su pago de $'+montoStr+' correspondiente a la semana '+pagados+' del '+fmtF(p.fecha)+'. Su próximo pago es el '+proxFmt+'. ¡Gracias por su puntualidad! 🏍️'
     };
     ultimaImagenURL=null;
@@ -1882,12 +1888,14 @@ const acc={
       if(!confirm('⚠️ POSIBLE PAGO DUPLICADO\n'+(moto.nombre||'')+' ya tiene pago en esta semana (sáb–vie):\n'+det+'\n\n'+(igual?'Hay un pago con la misma fecha y el mismo valor.':'No registra deuda pendiente.')+'\n¿Registrar de todos modos '+fmtP(val)+'?'))return;
     }
     const pagosAnt=DB.pagos.filter(p=>p.motoId===motoId).length;
+    const obsIn=$('pago-obs').value.trim();
+    const msgSaldo=msgSaldoPago({monto:val},moto,pagosAnt);
     const p={
       id:uid(), motoId, clienteNombre:moto.nombre,
       placa:moto.placa, modelo:moto.modelo,
       monto:val, fecha:$('pago-fec').value,
       metodo:$('pago-metodo').value,
-      obs:$('pago-obs').value.trim(),
+      obs:(msgSaldo&&!/saldo/i.test(obsIn))?(obsIn?obsIn+' · ':'')+msgSaldo:obsIn,
       semana:pagosAnt+1,
       cobrador:nomCobrador, cobradorUid:UID,
       recibo:String(Math.floor(Math.random()*9000)+1000)
